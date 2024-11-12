@@ -3,36 +3,29 @@ package baseDiceAgent
 import (
 	common "SOMASExtended/BaseDiceGame/common"
 	rand "math/rand"
-
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 	uuid "github.com/google/uuid"
 )
-
 
 type BaseDiceAgent struct{
 
 	*baseAgent.BaseAgent[IBaseDiceAgent]
 	team common.Team
 	scores []int  											//check
-
 }
-
 type IBaseDiceAgent interface {
 	baseAgent.IAgent[IBaseDiceAgent]
-	RollDice()
+	RollDice(IBaseDiceAgent)
 	MakeContribution() int
 	BroadcastReport(int)
 	VoteForAudit() uuid.UUID
 	ProposeAoAChange() bool
 	VoteForNewAoA() int
-	DoIStick(int, int) bool
-
-}
-func (agent *BaseDiceAgent) DoIStick (int, int) bool{
-	return true
+	DoIStick(int, int) bool  // Should be implemented by the specific agent
 }
 
-func (agent *BaseDiceAgent) RollDice() {
+
+func (agent *BaseDiceAgent) RollDice (specificAgent IBaseDiceAgent) {
 	prev := 0
 	total := 0
 	stick := false
@@ -47,22 +40,54 @@ func (agent *BaseDiceAgent) RollDice() {
 			total += score
 			prev = score
 
-			stick = agent.DoIStick(total, prev)
+			stick = specificAgent.DoIStick(total, prev)
 		} else {
 			bust = true
 			score = 0
 		}
 	}
 	//agent.-------------------------------------add 
-
+	agent.scores = append(agent.scores, total)
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+// EXAMPLE IMPLEMENTATION OF A SPECIFIC AGENT WHICH IMPLEMENTS THE BaseDiceAgent //
+///////////////////////////////////////////////////////////////////////////////////
 
-// func (agent *BaseDiceAgent) MakeContribution() int{
-// 	//agent.scores[1] just a check
-// 	agent.team.strategy
-// 	return 0
+type SpecificDiceAgent struct {
+	*BaseDiceAgent
+}
 
-// }
+// All of the functions defined in the Interface IBaseDiceAgent must be implemented in the SpecificDiceAgent
 
+func (agent *SpecificDiceAgent) MakeContribution() int {
+	return 0
+}
 
+func (agent *SpecificDiceAgent) DoIStick(total int, prev int) bool {
+	return total >= 15
+}
+
+func (agent *SpecificDiceAgent) BroadcastReport(score int) {
+}
+
+func (agent *SpecificDiceAgent) VoteForAudit() uuid.UUID {
+	return uuid.New()
+}
+
+func (agent *SpecificDiceAgent) ProposeAoAChange() bool {
+	return rand.Intn(2) == 1
+}
+
+func (agent *SpecificDiceAgent) VoteForNewAoA() int {
+	return rand.Intn(2)
+}
+
+func main() {
+
+	baseAgent := &BaseDiceAgent{}
+	specificAgent := &SpecificDiceAgent{BaseDiceAgent: baseAgent}
+
+	// Call RollDice, passing specificAgent, which implements DoIStick
+	specificAgent.RollDice(specificAgent)
+}
