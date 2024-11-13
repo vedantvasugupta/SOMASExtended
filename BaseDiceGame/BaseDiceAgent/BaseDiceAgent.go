@@ -8,6 +8,12 @@ import (
 	uuid "github.com/google/uuid"
 )
 
+type Report struct {
+	AgentID     uuid.UUID
+	RollHistory []int
+	CommonPool  int
+}
+
 type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
 	team   common.Team
@@ -19,7 +25,7 @@ type IBaseDiceAgent interface {
 	baseAgent.IAgent[IBaseDiceAgent]
 	RollDice(IBaseDiceAgent)
 	MakeContribution() int
-	BroadcastReport(int)
+	BroadcastReport(int) []Report
 	ProposeAudit() bool
 	VoteForAudit() uuid.UUID
 	ProposeAoAChange() bool
@@ -82,8 +88,20 @@ func (agent *BaseDiceAgent) MakeContribution() int {
 	return validContribution
 }
 
-func (agent *BaseDiceAgent) BroadcastReport(commonPool int) {
-	// group 4 and 6
+func (agent *BaseDiceAgent) BroadcastReport(commonPool int) []Report {
+
+	if agent.memory == nil {
+		agent.memory = make(map[uuid.UUID][]int)
+	}
+
+	// Create a single report containing all of this agent's rolls
+	report := Report{
+		AgentID:     agent.GetID(),
+		RollHistory: agent.memory[agent.GetID()], // All rolls from memory
+		CommonPool:  commonPool,
+	}
+
+	return []Report{report}
 }
 
 func (agent *BaseDiceAgent) ProposeAudit() bool {
