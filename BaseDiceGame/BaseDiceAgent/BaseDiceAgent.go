@@ -122,8 +122,9 @@ func (agent *BaseDiceAgent) ProposeAudit() bool {
 	return true
 }
 
-func (agent *BaseDiceAgent) VoteForAudit() uuid.UUID {
-	return agent.GetID()
+func (agent *BaseDiceAgent) VoteForAudit(vote bool) bool {
+	// Simply returns the user's vote choice (true for yes, false for no)
+	return vote
 }
 
 func ProposeAoAChange() bool {
