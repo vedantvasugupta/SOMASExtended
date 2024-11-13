@@ -8,9 +8,17 @@ import (
 	uuid "github.com/google/uuid"
 )
 
+type TurnRecord struct {
+	RollResults  []int // Individual roll results
+	TotalScore   int   // Final score for the turn
+	Stuck        bool  // Whether the agent stuck or bust
+	Bust         bool  // Whether the agent bust
+	Contribution int   // How much they contributed to pool
+}
+
 type Report struct {
 	AgentID     uuid.UUID
-	RollHistory []int
+	TurnHistory []TurnRecord
 	CommonPool  int
 }
 
@@ -18,7 +26,7 @@ type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
 	team   common.Team
 	score  int
-	memory map[uuid.UUID][]int
+	memory map[uuid.UUID][]TurnRecord
 }
 
 type IBaseDiceAgent interface {
@@ -33,71 +41,77 @@ type IBaseDiceAgent interface {
 	DoIStick(int, int) bool
 }
 
+func NewBaseDiceAgent(id uuid.UUID, team common.Team) *BaseDiceAgent {
+	return &BaseDiceAgent{
+		BaseAgent: baseAgent.NewBaseAgent[IBaseDiceAgent](id),
+		team:      team,
+		score:     0,
+		memory:    make(map[uuid.UUID][]TurnRecord),
+	}
+}
+
 func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 	prev := 0
 	total := 0
 	stick := false
 	bust := false
+	rollResults := []int{}
 
 	for !stick && !bust {
-		// Roll three dice
 		r1, r2, r3 := (rand.Intn(6) + 1), (rand.Intn(6) + 1), (rand.Intn(6) + 1)
 		score := r1 + r2 + r3
 
 		if score > prev {
 			total += score
 			prev = score
-
+			rollResults = append(rollResults, score)
 			stick = specificAgent.DoIStick(total, prev)
 		} else {
 			bust = true
 			score = 0
+			rollResults = append(rollResults, score)
 		}
 	}
 
-}
-
-// If not taking specificAgent as a function parameter (ideal method, as done in RollDice)
-// then you need to provide a basic implementation of the function in the BaseDiceAgent struct which should then be overrided by the specific agent
-//func (agent *BaseDiceAgent) MakeContribution() int{
-//agent.scores[1] just a check
-//agent.team.strategy ----------bug that needs to be solved
-//return 0
-
-//}
-
-func (agent *BaseDiceAgent) MakeContribution() int {
-
-	// Get the agent's current score
-	currentScore := agent.score
-
-	// Get the proposed contribution from the team's strategy
-	proposedContribution := agent.team.GetStrategy()
-
-	// Validate and adjust the contribution if needed
-	validContribution := proposedContribution
-	if proposedContribution > currentScore {
-		validContribution = currentScore // Cap the contribution at the current score
-	} else if proposedContribution < 0 {
-		validContribution = 0 // Prevent negative contributions
+	// Create turn record
+	turnRecord := TurnRecord{
+		RollResults:  rollResults,
+		TotalScore:   total,
+		Stuck:        stick,
+		Bust:         bust,
+		Contribution: 0, // Will be updated when MakeContribution is called
 	}
 
-	// Add the validated contribution to the team's pool
-	agent.team.AddToPool(validContribution) //AddToPool is not defined in the team interface
+	// Store the turn record in memory
+	agent.memory[agent.GetID()] = append(agent.memory[agent.GetID()], turnRecord)
+	agent.score = total
+}
 
+func (agent *BaseDiceAgent) MakeContribution() int {
+	currentScore := agent.score
+	proposedContribution := agent.team.GetStrategy()
+
+	validContribution := proposedContribution
+	if proposedContribution > currentScore {
+		validContribution = currentScore
+	} else if proposedContribution < 0 {
+		validContribution = 0
+	}
+
+	// Update the contribution in the latest turn record
+	if len(agent.memory[agent.GetID()]) > 0 {
+		lastIdx := len(agent.memory[agent.GetID()]) - 1
+		agent.memory[agent.GetID()][lastIdx].Contribution = validContribution
+	}
+
+	agent.team.AddToPool(validContribution)
 	return validContribution
 }
 
 func (agent *BaseDiceAgent) BroadcastReport(commonPool int) []Report {
-
-	if agent.memory == nil {
-		agent.memory = make(map[uuid.UUID][]int)
-	}
-
-	// Create a single report containing all of this agent's rolls
 	report := Report{
 		AgentID:     agent.GetID(),
-		RollHistory: agent.memory[agent.GetID()], // All rolls from memory
+		TurnHistory: agent.memory[agent.GetID()],
 		CommonPool:  commonPool,
 	}
 
