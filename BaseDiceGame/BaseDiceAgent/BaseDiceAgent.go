@@ -8,15 +8,11 @@ import (
 	uuid "github.com/google/uuid"
 )
 
-
-type BaseDiceAgent struct{
-
+type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
-	team common.Team
-	score int
-	memory map[uuid.UUID] []int
-
-
+	team   common.Team
+	score  int
+	memory map[uuid.UUID][]int
 }
 
 type IBaseDiceAgent interface {
@@ -29,7 +25,6 @@ type IBaseDiceAgent interface {
 	ProposeAoAChange() bool
 	VoteForNewAoA() int
 	DoIStick(int, int) bool
-
 }
 
 func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
@@ -58,30 +53,51 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 
 // If not taking specificAgent as a function parameter (ideal method, as done in RollDice)
 // then you need to provide a basic implementation of the function in the BaseDiceAgent struct which should then be overrided by the specific agent
-func (agent *BaseDiceAgent) MakeContribution() int{
-	//agent.scores[1] just a check
-	//agent.team.strategy ----------bug that needs to be solved 
-	return 0
+//func (agent *BaseDiceAgent) MakeContribution() int{
+//agent.scores[1] just a check
+//agent.team.strategy ----------bug that needs to be solved
+//return 0
 
+//}
+
+func (agent *BaseDiceAgent) MakeContribution() int {
+
+	// Get the agent's current score
+	currentScore := agent.score
+
+	// Get the proposed contribution from the team's strategy
+	proposedContribution := agent.team.GetStrategy()
+
+	// Validate and adjust the contribution if needed
+	validContribution := proposedContribution
+	if proposedContribution > currentScore {
+		validContribution = currentScore // Cap the contribution at the current score
+	} else if proposedContribution < 0 {
+		validContribution = 0 // Prevent negative contributions
+	}
+
+	// Add the validated contribution to the team's pool
+	agent.team.AddToPool(validContribution) //AddToPool is not defined in the team interface
+
+	return validContribution
 }
 
-func (agent *BaseDiceAgent) BroadcastReport(commonPool int){ 
-// group 4 and 6 
+func (agent *BaseDiceAgent) BroadcastReport(commonPool int) {
+	// group 4 and 6
 }
 
-func (agent *BaseDiceAgent) ProposeAudit() bool{
+func (agent *BaseDiceAgent) ProposeAudit() bool {
 	return true
 }
-
 
 func (agent *BaseDiceAgent) VoteForAudit() uuid.UUID {
 	return agent.GetID()
 }
 
-func ProposeAoAChange() bool{
+func ProposeAoAChange() bool {
 	return true
 }
 
-func VoteForNewAoA() int{
+func VoteForNewAoA() int {
 	return 0
 }
