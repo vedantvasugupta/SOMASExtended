@@ -72,7 +72,7 @@ func (bds *BaseDiceServer) formTeams() {
 		// iterate over all agents, first adding the agent to their team struct, then populating the agent with their team struct.
 		for _, ag := range agents {
 			
-			// find the current team index we are assigning
+			// find the teamID of the team we are currently working with
 			currentTeamID := teamIDList[teamIndex] 
 
 			// append this agents uuid to the list of agents in their team struct.
@@ -140,9 +140,11 @@ func (bds *BaseDiceServer) manageResources() {
 	// iterate through the agents and give them part of their teams common pool, based on their teams strategy.
 	for _, ag := range bds.GetAgentMap() {
 
-		agentTeam := bds.teams[ag.team.TeamID]
-
-		// TODO: Modify the agents score according to their teams strategy and common pool.
+		// determine this agents share of their teams common pool, given their teams strategy.
+		shareOfPool := determineShare(ag.team.CommonPool, ag.team.Strategy,)
+		
+		// increase their score by what they are given from the pool
+		ag.score += shareOfPool
 	}
 
 }
