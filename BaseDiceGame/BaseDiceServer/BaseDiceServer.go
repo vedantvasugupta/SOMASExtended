@@ -5,7 +5,6 @@ import (
 	common "SOMASExtended/BaseDiceGame/common"
 
 	baseServer "github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
-	"math/rand"
     uuid "github.com/google/uuid"
 )
 //based on methods defined in cw_structure_plan
@@ -37,33 +36,67 @@ type BaseDiceServer struct{
 
 // TEAM 2 METHODS BELOW
 
+//TODO:
 func (bds *BaseDiceServer) createServer(threshold, rounds, turns, teamSize, numAgents int) *IBaseDiceServer {
-	
+
 }
 
 func (bds *BaseDiceServer) formTeams() {
-	agents := bds.GetAgentMap()
-	teamSize := bds.teamSize
-	numOfAgents := bds.numAgents
-	numTeams := numOfAgents/teamSize // calculate num of teams needed
+		agents := bds.GetAgentMap()
+		teamSize := bds.teamSize
+		numOfAgents := bds.numAgents
+		numTeams := numOfAgents/teamSize // calculate num of teams needed
+		teamIDList := []uuid.UUID{}
 
-	// create [numTeams] Team structs, initialised each with a different TeamID, empty agent slice and empty strategy / commonpool.
-	for i := 0; i < numTeams; i++ {
-		//Create a new Team struct
-		team := common.NewTeam()
+		// STEP 1: Create Teams
 
-		// fill out the mapping between teamID's and the team struct.
-		bds.teams[team.TeamID] = team
-	}
+		// create [numTeams] Team structs, initialised each with a different TeamID, empty agent slice and empty strategy / commonpool. 
+		for i := 0; i < numTeams; i++ {
+			//Create a new Team struct
+			team := common.NewTeam()
+
+			// fill out the mapping between teamID's and the team struct.
+			bds.teams[team.TeamID] = team
+
+			// keep a list of the team ids
+			teamIDList = append(teamIDList, team.TeamID)
+
+		}
+
+		// Step 2: Assign each agent a team
 
 
-	// TODO: Iterate through all the agents and populate their team field with the correct Team struct.
-	for _, ag := range agents {
+		teamIndex := 0 // what teamID we are currently looking at
+		agentCount := 0 // counts number of agents on a team
 
-	}
+		// iterate over all agents, first adding the agent to their team struct, then populating the agent with their team struct.
+		for _, ag := range agents {
+			
+			// find the current team index we are assigning
+			currentTeamID := teamIDList[teamIndex] 
+
+			// append this agents uuid to the list of agents in their team struct.
+			teamAgentList := teams[currentTeamID].Agents
+			teamAgentList = append(teamAgentList, ag.GetID())
+
+			//assign agent the team represented by the current team id
+			ag.team = bds.teams[currentTeamID]
+
+			//increment num of agents on the team
+			agentCount++ 
+
+
+			// if we have reached the team size, move on to the next team index and reset the counter.
+			if agentCount == teamSize {
+				teamIndex++
+				agentCount = 0
+			}
+		} 
+		
 
 }
 
+//TODO:
 func (bds *BaseDiceServer) voteforArticlesofAssociation() {
 	
 }
@@ -106,7 +139,9 @@ func (bds *BaseDiceServer) manageResources() {
 
 	// iterate through the agents and give them part of their teams common pool, based on their teams strategy.
 	for _, ag := range bds.GetAgentMap() {
+
 		agentTeam := bds.teams[ag.team.TeamID]
+
 		// TODO: Modify the agents score according to their teams strategy and common pool.
 	}
 
