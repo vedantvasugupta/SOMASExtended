@@ -5,10 +5,11 @@ import (
 	common "SOMASExtended/BaseDiceGame/common"
 
 	baseServer "github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
-//	uuid "github.com/google/uuid"
+	"math/rand"
+    uuid "github.com/google/uuid"
 )
 //based on methods defined in cw_structure_plan
-// unsure if necessary based on counter agent example
+
 type IBaseDiceServer interface{
 	baseServer.IServer[baseDiceAgent.IBaseDiceAgent]
 	createServer(int, int, int, int, int) *IBaseDiceServer 
@@ -25,7 +26,7 @@ type IBaseDiceServer interface{
 
 type BaseDiceServer struct{
 	*baseServer.BaseServer[baseDiceAgent.IBaseDiceAgent]
-	team common.Team
+	teams map[uuid.UUID]common.Team //map of team IDs to their corresponding Team struct.
 	turns int
 	teamSize int
 	numAgents int
@@ -40,13 +41,30 @@ type BaseDiceServer struct{
 
 
 func (bds *BaseDiceServer) formTeams() {
-	
+	agents := bds.GetAgentMap()
+	teamSize := bds.teamSize
+	numOfAgents := bds.numAgents
+	numTeams := numOfAgents/teamSize // calculate num of teams needed
+
+	// create [numTeams] Team structs, initialised each with a different TeamID, empty agent slice and empty strategy / commonpool.
+	for i := 0; i < numTeams; i++ {
+		//Create a new Team struct
+		team := common.NewTeam()
+
+		// fill out the mapping between teamID's and the team struct.
+		bds.teams[team.TeamID] = team
+	}
+
+
+	// TODO: Iterate through all the agents and populate their team field with the correct Team struct.
+	for _, ag := range agents {
+
+	}
 
 }
 
 func (bds *BaseDiceServer) voteforArticlesofAssociation() {
-
-
+	
 }
 
 //not complete and pro, just showing basic idea
