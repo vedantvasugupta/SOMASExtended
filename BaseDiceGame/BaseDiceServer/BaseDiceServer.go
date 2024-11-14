@@ -10,7 +10,7 @@ import (
 
 // NOTES:
 // Need the BaseDiceAgent to have a getter / setter functions for their team, and their score
-// once this is implemented, change any instances of ag.team and ag.score to the appropriate getter / setter func.
+// once this is implemented, change any instances of ag.team and ag.score, etc etc to the appropriate getter / setter func.
 
 type IBaseDiceServer interface{
 	baseServer.IServer[baseDiceAgent.IBaseDiceAgent]
