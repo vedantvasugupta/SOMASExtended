@@ -81,8 +81,8 @@ func (bds *BaseDiceServer) formTeams() {
 			teamAgentList := bds.teams[currentTeamID].Agents
 			teamAgentList = append(teamAgentList, ag.GetID())
 
-			//assign agent the team represented by the current team id
-			ag.team = bds.teams[currentTeamID]
+			//assign agent the team represented by the current team id 
+			ag.team = bds.teams[currentTeamID] // TODO: use setter function
 
 			//increment num of agents on the team
 			agentCount++ 
@@ -143,11 +143,12 @@ func (bds *BaseDiceServer) manageResources() {
 	for _, ag := range bds.GetAgentMap() {
 
 		// determine this agents share of their teams common pool, given their teams strategy.
-		//TODO: need to implement determineShare function.
+
+		//TODO: need to implement determineShare function, and use a getter function to retrieve that agent's team, and thus their commonpool / strat.
 		shareOfPool := determineShare(ag.team.CommonPool, ag.team.Strategy,)
 		
 		// increase their score by what they are given from the pool
-		ag.score += shareOfPool
+		ag.score += shareOfPool //TODO: use setter function
 	}
 
 }
