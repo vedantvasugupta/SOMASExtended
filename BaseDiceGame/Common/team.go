@@ -10,7 +10,7 @@ type Team struct{
 	Strategy int
 }
 
-// constructor: NewTeam creates a new Team with a unique TeamID and initializes other fields.
+// constructor: NewTeam creates a new Team with a unique TeamID and initializes other fields as blank.
 func NewTeam() Team {
 	return Team{
 		TeamID:     uuid.New(),  // Generate a unique TeamID
