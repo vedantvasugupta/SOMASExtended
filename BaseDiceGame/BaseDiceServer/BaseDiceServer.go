@@ -36,6 +36,34 @@ type BaseDiceServer struct{
 
 // TEAM 2 METHODS BELOW
 
+//func createServer
+
+
+func (bds *BaseDiceServer) formTeams() {
+	
+
+}
+
+func (bds *BaseDiceServer) voteforArticlesofAssociation() {
+
+
+}
+
+//not complete and pro, just showing basic idea
+func (bds *BaseDiceServer) runTurn() {
+	for _, ag := range bds.GetAgentMap() {
+		// get each agent to roll dice
+		// something like...
+		ag.RollDice(ag)
+	}
+}
+
+func (bds *BaseDiceServer) manageResources() {
+
+}
+
+
+
 
 
 // TEAM 5 METHODS
