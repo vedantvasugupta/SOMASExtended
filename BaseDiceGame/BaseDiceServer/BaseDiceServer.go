@@ -37,8 +37,9 @@ type BaseDiceServer struct{
 
 // TEAM 2 METHODS BELOW
 
-//func createServer
-
+func (bds *BaseDiceServer) createServer(threshold, rounds, turns, teamSize, numAgents int) *IBaseDiceServer {
+	
+}
 
 func (bds *BaseDiceServer) formTeams() {
 	agents := bds.GetAgentMap()
@@ -67,16 +68,47 @@ func (bds *BaseDiceServer) voteforArticlesofAssociation() {
 	
 }
 
-//not complete and pro, just showing basic idea
 func (bds *BaseDiceServer) runTurn() {
+
+	// Step 1: Get each agent to enter the Dice Roll loop and attain a score.
 	for _, ag := range bds.GetAgentMap() {
-		// get each agent to roll dice
-		// something like...
 		ag.RollDice(ag)
 	}
+
+	// Step 2: Agents make contribution to their team pool, and server redistributes based on team rules.
+	bds.manageResources()
+
+	// Step 3: Report Generation (and broadcast?)
+
+	bds.generateReport()
+
+	// Step 4: Run the Audit Process
+
+	bds.audit()
+
+	// Step 5: Run the Rule Mod Process
+
+	bds.modifyRules()
+
 }
 
 func (bds *BaseDiceServer) manageResources() {
+	
+	// Stage 1: Contribution
+
+	// iterate through agents and call on them to make their contribution to their teams common pool
+	for _, ag := range bds.GetAgentMap() {
+		agentTeam := bds.teams[ag.team.TeamID]
+		agentTeam.CommonPool += ag.MakeContribution()
+	}
+
+	// Stage 2: Redistribution
+
+	// iterate through the agents and give them part of their teams common pool, based on their teams strategy.
+	for _, ag := range bds.GetAgentMap() {
+		agentTeam := bds.teams[ag.team.TeamID]
+		// TODO: Modify the agents score according to their teams strategy and common pool.
+	}
 
 }
 
