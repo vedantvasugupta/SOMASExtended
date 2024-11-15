@@ -23,6 +23,8 @@ type IBaseDiceServer interface {
 	audit()
 	modifyRules()
 	verifyThreshold()
+	CollectContributions()
+	RedistributeCommonPool()
 }
 
 type BaseDiceServer struct {
@@ -95,7 +97,7 @@ func (bds *BaseDiceServer) formTeams() {
 }
 
 // TODO:
-func (bds *BaseDiceServer) voteforArticlesofAssociation() {
+func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 
 }
 
@@ -123,30 +125,49 @@ func (bds *BaseDiceServer) runTurn() {
 
 }
 
-func (bds *BaseDiceServer) manageResources() {
+// REMOVE THIS FUNCTION
+// func (bds *BaseDiceServer) ManageResources() {
 
-	// Stage 1: Contribution
+// 	// Stage 1: Contribution
 
+// 	// iterate through agents and call on them to make their contribution to their teams common pool
+// 	for _, ag := range bds.GetAgentMap() {
+// 		agentTeam := bds.teams[ag.GetTeam().GetTeamID()]
+// 		agentTeam.IncreaseCommonPool(ag.MakeContribution())
+// 	}
+
+// 	// Stage 2: Redistribution
+
+// 	// iterate through the agents and give them part of their teams common pool, based on their teams strategy.
+// 	for _, ag := range bds.GetAgentMap() {
+
+// 		// determine this agents share of their teams common pool, given their teams strategy.
+
+// 		//TODO: need to implement determineShare function, and use a getter function to retrieve that agent's team, and thus their commonpool / strat.
+// 		shareOfPool := determineShare(ag.GetTeam().GetCommonPool(), ag.GetTeam().GetStrategy())
+
+// 		// increase their score by what they are given from the pool
+// 		ag.SetScore(ag.GetScore() + shareOfPool)
+// 	}
+
+// }
+
+/// CollectContributions iterates through all the agents in the server and calls on them to make their contribution to their team's common pool.
+func (bds *BaseDiceServer) CollectContributions() {
 	// iterate through agents and call on them to make their contribution to their teams common pool
 	for _, ag := range bds.GetAgentMap() {
 		agentTeam := bds.teams[ag.GetTeam().GetTeamID()]
-		agentTeam.CommonPool += ag.MakeContribution()
+		agentTeam.IncreaseCommonPool(ag.MakeContribution())
 	}
+}
 
-	// Stage 2: Redistribution
-
-	// iterate through the agents and give them part of their teams common pool, based on their teams strategy.
-	for _, ag := range bds.GetAgentMap() {
-
-		// determine this agents share of their teams common pool, given their teams strategy.
-
-		//TODO: need to implement determineShare function, and use a getter function to retrieve that agent's team, and thus their commonpool / strat.
-		shareOfPool := determineShare(ag.team.CommonPool, ag.team.Strategy)
-
-		// increase their score by what they are given from the pool
-		ag.score += shareOfPool //TODO: use setter function
+/// RedistributeCommonPool calls the TakeFromCommonPool function for each agent in the server.
+/// Each agent will take from the common pool based on their team's strategy.
+func (bds *BaseDiceServer) RedistributeCommonPool() {
+	for _, ag := range bds.GetAgentMap() {	
+		// Agents take from the common pool based on their team's strategy	
+		ag.TakeFromCommonPool()
 	}
-
 }
 
 // TEAM 5 METHODS
