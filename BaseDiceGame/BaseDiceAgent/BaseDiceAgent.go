@@ -25,9 +25,16 @@ type IBaseDiceAgent interface {
 	ProposeAoAChange() bool
 	VoteForNewAoA() int
 	DoIStick(int, int) bool
+	GetTeam() *common.Team
 }
 
 func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
+	/*
+	RollDice is a function that simulates the rolling of three dice.
+
+	The loop runs until the agent decides to stick or goes bust.
+	This function MUST BE implemented by the specificAgent object.
+	*/
 	prev := 0
 	total := 0
 	stick := false
@@ -53,15 +60,16 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 
 // If not taking specificAgent as a function parameter (ideal method, as done in RollDice)
 // then you need to provide a basic implementation of the function in the BaseDiceAgent struct which should then be overrided by the specific agent
-func (agent *BaseDiceAgent) MakeContribution() int {
+func (agent *BaseDiceAgent) MakeContribution(specificAgent IBaseDiceAgent) int {
 	//agent.scores[1] just a check
 	agent.team.GetStrategy()
 	return 0
 
 }
 
-func (agent *BaseDiceAgent) BroadcastReport(commonPool int) {
-	// group 4 and 6
+/// Returns the pointer to the Team object that this agent is assigned to 
+func (agent *BaseDiceAgent) GetTeam() *common.Team {
+	return &agent.team
 }
 
 func (agent *BaseDiceAgent) ProposeAudit() bool {
