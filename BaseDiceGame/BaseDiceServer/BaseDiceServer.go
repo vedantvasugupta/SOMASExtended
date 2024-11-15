@@ -14,15 +14,14 @@ import (
 
 type IBaseDiceServer interface {
 	baseServer.IServer[baseDiceAgent.IBaseDiceAgent]
-	createServer(int, int, int, int, int) *IBaseDiceServer
-	formTeams()
-	voteforArticlesofAssociation()
-	runTurn()
-	manageResources()
-	generateReport()
-	audit()
-	modifyRules()
-	verifyThreshold()
+	CreateServer(int, int, int, int, int) *IBaseDiceServer
+	FormTeams()
+	VoteforArticlesofAssociation()
+	RunTurn()
+	ManageResources()
+	GenerateReport()
+	Audit()
+	VerifyThreshold()
 	CollectContributions()
 	RedistributeCommonPool()
 }
@@ -37,14 +36,8 @@ type BaseDiceServer struct {
 	threshold int
 }
 
-// TEAM 2 METHODS BELOW
-
-// TODO:
-func (bds *BaseDiceServer) createServer(threshold, rounds, turns, teamSize, numAgents int) *IBaseDiceServer {
-
-}
-
-func (bds *BaseDiceServer) formTeams() {
+// TODO: this is not correct yet!!!!!
+func (bds *BaseDiceServer) FormTeams() {
 	agents := bds.GetAgentMap()
 	teamSize := bds.teamSize
 	numOfAgents := bds.numAgents
@@ -56,13 +49,14 @@ func (bds *BaseDiceServer) formTeams() {
 	// create [numTeams] Team structs, initialised each with a different TeamID, empty agent slice and empty strategy / commonpool.
 	for i := 0; i < numTeams; i++ {
 		//Create a new Team struct
-		team := common.NewTeam()
+		team := common.CreateTeam()
 
+		teamId := team.GetTeamID()
 		// fill out the mapping between teamID's and the team struct.
-		bds.teams[team.TeamID] = team
+		bds.teams[teamId] = team
 
 		// keep a list of the team ids
-		teamIDList = append(teamIDList, team.TeamID)
+		teamIDList = append(teamIDList, teamId)
 
 	}
 
@@ -74,100 +68,91 @@ func (bds *BaseDiceServer) formTeams() {
 	// iterate over all agents, first adding the agent to their team struct, then populating the agent with their team struct.
 	for _, ag := range agents {
 
-		// find the teamID of the team we are currently working with
-		currentTeamID := teamIDList[teamIndex]
+		for teamIndex < len(teamIDList) {
 
-		// append this agents uuid to the list of agents in their team struct.
-		teamAgentList := bds.teams[currentTeamID].Agents
-		teamAgentList = append(teamAgentList, ag.GetID())
+			// find the teamID of the team we are currently working with
+			currentTeamID := teamIDList[teamIndex]
 
-		//assign agent the team represented by the current team id
-		ag.team = bds.teams[currentTeamID] // TODO: use setter function
+			// append this agents uuid to the list of agents in their team struct.
+			teamAgentList := bds.teams[currentTeamID]
+			teamAgentList.AddMember(ag.GetID())
+		
 
-		//increment num of agents on the team
-		agentCount++
+			//increment num of agents on the team
+			agentCount++
 
-		// if we have reached the team size, move on to the next team index and reset the counter.
-		if agentCount == teamSize {
-			teamIndex++
-			agentCount = 0
+			// if we have reached the team size, move on to the next team index and reset the counter.
+			if agentCount == teamSize {
+				teamIndex++
+				agentCount = 0
+			}
 		}
 	}
 
 }
 
-// TODO:
-func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
-
-}
-
 func (bds *BaseDiceServer) runTurn() {
 
-	// Step 1: Get each agent to enter the Dice Roll loop and attain a score.
-	for _, ag := range bds.GetAgentMap() {
-		ag.RollDice(ag)
+	// Step 1: Vote for Articles of Association
+	bds.VoteforArticlesofAssociation()
+	
+	for _, team := range bds.teams {
+		agentMap := bds.GetAgentMap()
+		var commonPool int = 0
+		for _, agentId := range team.GetTeamMembers() {
+			ag := agentMap[agentId]
+			// Step 2: Roll Dice
+			ag.RollDice(ag)
+			// Step 3: Make Contribution
+			commonPool += ag.MakeContribution()
+		}
+		team.IncreaseCommonPool(commonPool)
 	}
 
-	// Step 2: Agents make contribution to their team pool, and server redistributes based on team rules.
-	bds.manageResources()
-
-	// Step 3: Report Generation (and broadcast?)
-
-	bds.generateReport()
-
 	// Step 4: Run the Audit Process
+	for _, team := range bds.teams {
+		agentMap := bds.GetAgentMap()
+		var vote int = 0
+		for _, agentId := range team.GetTeamMembers() {
+			ag := agentMap[agentId]
+			vote = ag.VoteForAudit()
+		}
+		if vote > 0 {
+			bds.Audit()
+		}
+		
+	}
 
-	bds.audit()
-
-	// Step 5: Run the Rule Mod Process
-
-	bds.modifyRules()
-
+	// Step 5: Redistribute Common Pool
+	for _, team := range bds.teams {
+		agentMap := bds.GetAgentMap()
+		for _, agentId := range team.GetTeamMembers() {
+			ag := agentMap[agentId]
+			ag.TakeFromCommonPool()
+		}
+	}
+	
 }
 
-// REMOVE THIS FUNCTION
-// func (bds *BaseDiceServer) ManageResources() {
+func (bds *BaseDiceServer) Audit(){}
 
-// 	// Stage 1: Contribution
+func (bds *BaseDiceServer) VoteforArticlesofAssociation() {}
 
+// TODO these function have been made redundant, keep for reference
+// /// CollectContributions iterates through all the agents in the server and calls on them to make their contribution to their team's common pool.
+// func (bds *BaseDiceServer) CollectContributions() {
 // 	// iterate through agents and call on them to make their contribution to their teams common pool
 // 	for _, ag := range bds.GetAgentMap() {
 // 		agentTeam := bds.teams[ag.GetTeam().GetTeamID()]
 // 		agentTeam.IncreaseCommonPool(ag.MakeContribution())
 // 	}
-
-// 	// Stage 2: Redistribution
-
-// 	// iterate through the agents and give them part of their teams common pool, based on their teams strategy.
-// 	for _, ag := range bds.GetAgentMap() {
-
-// 		// determine this agents share of their teams common pool, given their teams strategy.
-
-// 		//TODO: need to implement determineShare function, and use a getter function to retrieve that agent's team, and thus their commonpool / strat.
-// 		shareOfPool := determineShare(ag.GetTeam().GetCommonPool(), ag.GetTeam().GetStrategy())
-
-// 		// increase their score by what they are given from the pool
-// 		ag.SetScore(ag.GetScore() + shareOfPool)
-// 	}
-
 // }
 
-/// CollectContributions iterates through all the agents in the server and calls on them to make their contribution to their team's common pool.
-func (bds *BaseDiceServer) CollectContributions() {
-	// iterate through agents and call on them to make their contribution to their teams common pool
-	for _, ag := range bds.GetAgentMap() {
-		agentTeam := bds.teams[ag.GetTeam().GetTeamID()]
-		agentTeam.IncreaseCommonPool(ag.MakeContribution())
-	}
-}
-
-/// RedistributeCommonPool calls the TakeFromCommonPool function for each agent in the server.
-/// Each agent will take from the common pool based on their team's strategy.
-func (bds *BaseDiceServer) RedistributeCommonPool() {
-	for _, ag := range bds.GetAgentMap() {	
-		// Agents take from the common pool based on their team's strategy	
-		ag.TakeFromCommonPool()
-	}
-}
-
-// TEAM 5 METHODS
+// /// RedistributeCommonPool calls the TakeFromCommonPool function for each agent in the server.
+// /// Each agent will take from the common pool based on their team's strategy.
+// func (bds *BaseDiceServer) RedistributeCommonPool() {
+// 	for _, ag := range bds.GetAgentMap() {	
+// 		// Agents take from the common pool based on their team's strategy	
+// 		ag.TakeFromCommonPool()
+// 	}
+// }
