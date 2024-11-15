@@ -23,6 +23,12 @@ type ITeam interface {
 	GetCommonPool() int
 	GetTeamMembers() []uuid.UUID
 	GetStrategy() int
+	IncreaseCommonPool(int)
+	DecreaseCommonPool(amount int)
+	ResetCommonPool()
+	AddMember(memberID uuid.UUID)
+	RemoveMember(memberID uuid.UUID)
+	SetStrategy(strategy int)
 }
 
 func (t *Team) GetTeamID() uuid.UUID {
@@ -39,4 +45,40 @@ func (t *Team) GetTeamMembers() []uuid.UUID {
 
 func (t *Team) GetStrategy() int {
 	return t.strategy
+}
+
+func (t *Team) IncreaseCommonPool(amount int) {
+	t.commonPool += amount
+}
+
+func (t *Team) DecreaseCommonPool(amount int) {
+	t.commonPool -= amount
+}
+
+func (t *Team) ResetCommonPool() {
+	t.commonPool = 0
+}
+
+func (t *Team) RemoveMember(memberID uuid.UUID) {
+	for i, member := range t.teamMembers {
+		if member == memberID {
+			t.teamMembers = append(t.teamMembers[:i], t.teamMembers[i+1:]...)
+			return 
+		}
+	}
+} 
+
+
+func (t *Team) AddMember(memberID uuid.UUID) {
+	// Check if the member is already in the team
+	for _, member := range t.teamMembers {
+		if member == memberID {
+			return 
+		}
+	}
+	t.teamMembers = append(t.teamMembers, memberID)
+}
+
+func (t *Team) SetStrategy(strategy int) {
+	t.strategy = strategy
 }
