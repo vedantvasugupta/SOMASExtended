@@ -4,20 +4,44 @@ import "github.com/google/uuid"
 
 
 type Team struct{
-	TeamID uuid.UUID
-	CommonPool int
-	Agents []uuid.UUID
-	Strategy int
+	teamID uuid.UUID
+	commonPool int
+	teamMembers []uuid.UUID
+	strategy int
 }
 
-// constructor: NewTeam creates a new Team with a unique TeamID and initializes other fields as blank.
-func NewTeam() Team {
+
+func CreateTeam() Team {
 	return Team{
-		TeamID:     uuid.New(),  // Generate a unique TeamID
-		CommonPool: 0,           // Initialize commonPool to 0
-		Agents:     []uuid.UUID{}, // Initialize an empty slice of agent UUIDs
-		Strategy:   0,            // Initialize strategy as 0
+		teamID:     uuid.New(),  // Generate a unique TeamID
+		commonPool: 0,           // Initialize commonPool to 0
+		teamMembers:     []uuid.UUID{}, // Initialize an empty slice of agent UUIDs
+		strategy:   0,            // Initialize strategy as 0
 	}
+}
+
+type ITeam interface {
+	GetTeamID() uuid.UUID
+	GetCommonPool() int
+	GetTeamMembers() []uuid.UUID
+	GetStrategy() int
+	
+}
+
+func (t *Team)GetTeamID() uuid.UUID{
+	return t.teamID
+}
+
+func (t *Team)GetCommonPool() int{
+	return t.commonPool
+}
+
+func (t *Team)GetTeamMembers() []uuid.UUID{
+	return t.teamMembers
+}
+
+func (t *Team)GetStrategy() int{
+	return t.strategy
 }
 
 
