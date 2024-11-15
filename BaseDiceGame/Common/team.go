@@ -23,6 +23,8 @@ type ITeam interface {
 	GetCommonPool() int
 	GetTeamMembers() []uuid.UUID
 	GetStrategy() int
+	AddMember(memberID uuid.UUID)
+	RemoveMember(memberID uuid.UUID)
 }
 
 func (t *Team) GetTeamID() uuid.UUID {
@@ -59,4 +61,8 @@ func (t *Team) AddMember(memberID uuid.UUID) {
 		}
 	}
 	t.teamMembers = append(t.teamMembers, memberID)
+}
+
+func (t *Team) SetStrategy(strategy int) {
+	t.strategy = strategy
 }
