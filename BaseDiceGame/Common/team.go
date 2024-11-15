@@ -40,3 +40,23 @@ func (t *Team) GetTeamMembers() []uuid.UUID {
 func (t *Team) GetStrategy() int {
 	return t.strategy
 }
+ 
+func (t *Team) RemoveMember(memberID uuid.UUID) {
+	for i, member := range t.teamMembers {
+		if member == memberID {
+			t.teamMembers = append(t.teamMembers[:i], t.teamMembers[i+1:]...)
+			return 
+		}
+	}
+} 
+
+
+func (t *Team) AddMember(memberID uuid.UUID) {
+	// Check if the member is already in the team
+	for _, member := range t.teamMembers {
+		if member == memberID {
+			return 
+		}
+	}
+	t.teamMembers = append(t.teamMembers, memberID)
+}

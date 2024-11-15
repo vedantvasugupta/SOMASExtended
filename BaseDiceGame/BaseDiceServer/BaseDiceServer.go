@@ -129,7 +129,7 @@ func (bds *BaseDiceServer) manageResources() {
 
 	// iterate through agents and call on them to make their contribution to their teams common pool
 	for _, ag := range bds.GetAgentMap() {
-		agentTeam := bds.teams[ag.team.TeamID]
+		agentTeam := bds.teams[ag.team.GetTeamID()]
 		agentTeam.CommonPool += ag.MakeContribution()
 	}
 
