@@ -17,15 +17,15 @@ type BaseDiceAgent struct {
 
 type IBaseDiceAgent interface {
 	baseAgent.IAgent[IBaseDiceAgent]
+	MakeContribution() int  // Implemented by the specific agent
+	DoIStick(int, int) bool  // Implemented by the specific agent
+	// GetVoteForAudit and GetPreferredAoA can be checked multiple times per turn, and should just return False/0  
+	GetVoteForAudit() bool  // Implemented by the specific agent. Returns true if the agent votes for an audit.
+	GetPreferredAoA() int  // Implemented by the specific agent. Returns the id of AoA that the agent prefers. 0 if no preference.
 	RollDice(IBaseDiceAgent)
-	MakeContribution() int
-	BroadcastReport(int)
-	ProposeAudit() bool
-	VoteForAudit() uuid.UUID
-	ProposeAoAChange() bool
-	VoteForNewAoA() int
-	DoIStick(int, int) bool
 	GetTeam() *common.Team
+	SetScore(int)
+	GetScore() int
 }
 
 func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
@@ -33,7 +33,6 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 	RollDice is a function that simulates the rolling of three dice.
 
 	The loop runs until the agent decides to stick or goes bust.
-	This function MUST BE implemented by the specificAgent object.
 	*/
 	prev := 0
 	total := 0
@@ -55,16 +54,6 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 			score = 0
 		}
 	}
-
-}
-
-// If not taking specificAgent as a function parameter (ideal method, as done in RollDice)
-// then you need to provide a basic implementation of the function in the BaseDiceAgent struct which should then be overrided by the specific agent
-func (agent *BaseDiceAgent) MakeContribution(specificAgent IBaseDiceAgent) int {
-	//agent.scores[1] just a check
-	agent.team.GetStrategy()
-	return 0
-
 }
 
 /// Returns the pointer to the Team object that this agent is assigned to 
@@ -72,18 +61,12 @@ func (agent *BaseDiceAgent) GetTeam() *common.Team {
 	return &agent.team
 }
 
-func (agent *BaseDiceAgent) ProposeAudit() bool {
-	return true
+func (agent *BaseDiceAgent) SetScore(score int) {
+	agent.score = score
 }
 
-func (agent *BaseDiceAgent) VoteForAudit() uuid.UUID {
-	return agent.GetID()
+func (agent *BaseDiceAgent) GetScore() int {
+	return agent.score
 }
 
-func ProposeAoAChange() bool {
-	return true
-}
 
-func VoteForNewAoA() int {
-	return 0
-}
