@@ -102,6 +102,9 @@ func (agent *BaseDiceAgent) MakeContribution() int {
 	if len(agent.memory[agent.GetID()]) > 0 {
 		lastIdx := len(agent.memory[agent.GetID()]) - 1
 		agent.memory[agent.GetID()][lastIdx].Contribution = validContribution
+
+		// Notify server after contribution is set
+		server.StoreAgentResult(agent.GetID(), agent.memory[agent.GetID()][lastIdx])
 	}
 
 	agent.team.AddToPool(validContribution)
@@ -109,13 +112,23 @@ func (agent *BaseDiceAgent) MakeContribution() int {
 }
 
 func (agent *BaseDiceAgent) BroadcastReport(commonPool int) []Report {
-	report := Report{
-		AgentID:     agent.GetID(),
-		TurnHistory: agent.memory[agent.GetID()],
-		CommonPool:  commonPool,
+	// Create a report with only the total score from the last turn
+	if len(agent.memory[agent.GetID()]) > 0 {
+		lastTurn := agent.memory[agent.GetID()][len(agent.memory[agent.GetID()])-1]
+		// Create a simplified TurnRecord with only the total score
+		simplifiedTurn := TurnRecord{
+			TotalScore:   lastTurn.TotalScore,
+			Contribution: lastTurn.Contribution,
+		}
+		return []Report{
+			{
+				AgentID:     agent.GetID(),
+				TurnHistory: []TurnRecord{simplifiedTurn},
+				CommonPool:  commonPool,
+			},
+		}
 	}
-
-	return []Report{report}
+	return []Report{} // Return empty slice if no turns have been played
 }
 
 func (agent *BaseDiceAgent) ProposeAudit() bool {
