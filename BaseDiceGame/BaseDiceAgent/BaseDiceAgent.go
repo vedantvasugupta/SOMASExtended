@@ -117,8 +117,7 @@ func (agent *BaseDiceAgent) BroadcastReport(commonPool int) []Report {
 		lastTurn := agent.memory[agent.GetID()][len(agent.memory[agent.GetID()])-1]
 		// Create a simplified TurnRecord with only the total score
 		simplifiedTurn := TurnRecord{
-			TotalScore:   lastTurn.TotalScore,
-			Contribution: lastTurn.Contribution,
+			TotalScore: lastTurn.TotalScore,
 		}
 		return []Report{
 			{
