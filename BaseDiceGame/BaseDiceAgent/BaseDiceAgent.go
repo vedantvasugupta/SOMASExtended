@@ -1,21 +1,18 @@
-package baseDiceAgent
+package BaseDiceAgent
 
 import (
-	common "SOMASExtended/BaseDiceGame/common"
+	common "SOMASExtended/BaseDiceGame/Common"
 	rand "math/rand"
+
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 	uuid "github.com/google/uuid"
 )
 
-
-type BaseDiceAgent struct{
-
+type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
-	team common.Team
-	score int
-	memory map[uuid.UUID] []int
-
-
+	team   common.Team
+	score  int
+	memory map[uuid.UUID][]int
 }
 
 type IBaseDiceAgent interface {
@@ -28,7 +25,6 @@ type IBaseDiceAgent interface {
 	ProposeAoAChange() bool
 	VoteForNewAoA() int
 	DoIStick(int, int) bool
-
 }
 
 func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
@@ -57,30 +53,29 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 
 // If not taking specificAgent as a function parameter (ideal method, as done in RollDice)
 // then you need to provide a basic implementation of the function in the BaseDiceAgent struct which should then be overrided by the specific agent
-func (agent *BaseDiceAgent) MakeContribution() int{
+func (agent *BaseDiceAgent) MakeContribution() int {
 	//agent.scores[1] just a check
-	agent.team.GetStrategy()  
+	agent.team.GetStrategy()
 	return 0
 
 }
 
-func (agent *BaseDiceAgent) BroadcastReport(commonPool int){ 
-// group 4 and 6 
+func (agent *BaseDiceAgent) BroadcastReport(commonPool int) {
+	// group 4 and 6
 }
 
-func (agent *BaseDiceAgent) ProposeAudit() bool{
+func (agent *BaseDiceAgent) ProposeAudit() bool {
 	return true
 }
-
 
 func (agent *BaseDiceAgent) VoteForAudit() uuid.UUID {
 	return agent.GetID()
 }
 
-func ProposeAoAChange() bool{
+func ProposeAoAChange() bool {
 	return true
 }
 
-func VoteForNewAoA() int{
+func VoteForNewAoA() int {
 	return 0
 }
