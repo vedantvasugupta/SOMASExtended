@@ -11,6 +11,7 @@ import (
 * put the team it most wants to join at the start of the slice. */
 type orphanPool map[uuid.UUID][]uuid.UUID
 var pool = make(orphanPool)
+// TODO: Probably make the orphanPool an attribute of the BDS struct? 
 
 // The percentage of agents that have to vote 'accept' in order for an orphan
 // to be taken into a team
