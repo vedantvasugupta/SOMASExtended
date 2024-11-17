@@ -6,6 +6,9 @@ import (
 
 	baseServer "github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
 	uuid "github.com/google/uuid"
+
+	"math/rand"
+	"time"
 )
 
 // NOTES:
@@ -36,7 +39,7 @@ type BaseDiceServer struct {
 	threshold int
 }
 
-// TODO: this is not correct yet!!!!!
+
 func (bds *BaseDiceServer) FormTeams() {
 	agents := bds.GetAgentMap()
 	teamSize := bds.teamSize
@@ -50,14 +53,11 @@ func (bds *BaseDiceServer) FormTeams() {
 	for i := 0; i < numTeams; i++ {
 		//Create a new Team struct
 		team := common.CreateTeam()
-
 		teamId := team.GetTeamID()
 		// fill out the mapping between teamID's and the team struct.
 		bds.teams[teamId] = team
-
 		// keep a list of the team ids
 		teamIDList = append(teamIDList, teamId)
-
 	}
 
 	// Step 2: Assign each agent a team
@@ -65,7 +65,7 @@ func (bds *BaseDiceServer) FormTeams() {
 	teamIndex := 0  // what teamID we are currently looking at
 	agentCount := 0 // counts number of agents on a team
 
-	// iterate over all agents, first adding the agent to their team struct, then populating the agent with their team struct.
+	// iterate through all the teams in the server
 	for _, ag := range agents {
 
 		for teamIndex < len(teamIDList) {
@@ -136,7 +136,50 @@ func (bds *BaseDiceServer) runTurn() {
 
 func (bds *BaseDiceServer) Audit(){}
 
-func (bds *BaseDiceServer) VoteforArticlesofAssociation() {}
+/// Iterates though each team in the server and asks each agent to vote for Articles of Association.
+/// The team's strategy is then set to the most common AoA number.
+/// If there is a tie, the team's strategy is set to a random AoA number from the most common AoAs.
+func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
+	// Seed the random number generator as rand is pseudo-random
+	// If not seeded the random number generator will produce the same output given the same input
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for _, team := range bds.teams {
+		agentMap := bds.GetAgentMap()
+		voteCounts := make(map[int]int) // Map to count votes for each AoA number
+		for _, agentId := range team.GetTeamMembers() {
+			ag := agentMap[agentId]
+			vote := ag.VotePreferredAoA()
+			voteCounts[vote]++
+		}
+
+		// Find the maximum number of votes any AoA received
+		maxVotes := 0
+		for _, count := range voteCounts {
+			if count > maxVotes {
+				maxVotes = count
+			}
+		}
+
+		// Find the AoA number that received the most votes
+		mostCommonAoAs := []int{}
+        for aoa, count := range voteCounts {
+            if count == maxVotes {
+                mostCommonAoAs = append(mostCommonAoAs, aoa)
+            }
+        }
+
+		// randomly select index of the most common AoAs list
+		selectedAoA := mostCommonAoAs[0]
+		if len(mostCommonAoAs) >1 {
+			selectedAoA = mostCommonAoAs[rng.Intn(len(mostCommonAoAs))]
+		}
+
+		// Set the team's strategy to the selected AoA
+		team.SetStrategy(selectedAoA)
+
+	}
+}
 
 // TODO these function have been made redundant, keep for reference
 // /// CollectContributions iterates through all the agents in the server and calls on them to make their contribution to their team's common pool.
