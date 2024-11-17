@@ -3,6 +3,7 @@ package BaseDiceServer
 import (
 	baseDiceAgent "SOMASExtended/BaseDiceGame/BaseDiceAgent"
 	common "SOMASExtended/BaseDiceGame/Common"
+	baseAoA "SOMASExtended/BaseDiceGame/BaseArticlesOfAssociation"
 
 	baseServer "github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
 	uuid "github.com/google/uuid"
@@ -23,7 +24,7 @@ type IBaseDiceServer interface {
 	RunTurn()
 	ManageResources()
 	GenerateReport()
-	Audit()
+	Audit(common.Team)
 	VerifyThreshold()
 	CollectContributions()
 	RedistributeCommonPool()
@@ -38,7 +39,6 @@ type BaseDiceServer struct {
 	rounds    int
 	threshold int
 }
-
 
 func (bds *BaseDiceServer) FormTeams() {
 	agents := bds.GetAgentMap()
@@ -76,7 +76,6 @@ func (bds *BaseDiceServer) FormTeams() {
 			// append this agents uuid to the list of agents in their team struct.
 			teamAgentList := bds.teams[currentTeamID]
 			teamAgentList.AddMember(ag.GetID())
-		
 
 			//increment num of agents on the team
 			agentCount++
@@ -95,7 +94,7 @@ func (bds *BaseDiceServer) runTurn() {
 
 	// Step 1: Vote for Articles of Association
 	bds.VoteforArticlesofAssociation()
-	
+
 	for _, team := range bds.teams {
 		agentMap := bds.GetAgentMap()
 		var commonPool int = 0
@@ -118,9 +117,12 @@ func (bds *BaseDiceServer) runTurn() {
 			vote = ag.VoteForAudit()
 		}
 		if vote > 0 {
-			bds.Audit()
+			bds.Audit(team)
+		} else{
+			// If no agents voted for audit, set the audit result to an empty map
+			team.SetAuditResult(make(map[uuid.UUID]bool))
 		}
-		
+
 	}
 
 	// Step 5: Redistribute Common Pool
@@ -131,10 +133,25 @@ func (bds *BaseDiceServer) runTurn() {
 			ag.TakeFromCommonPool()
 		}
 	}
-	
+
 }
 
-func (bds *BaseDiceServer) Audit(){}
+/// Audit verifies that each agent has contributed the expected amount to the common pool.
+/// An audit is based on the team's strategy and the information the server has about the agents.
+/// Provides the expected contributions
+func (bds *BaseDiceServer) Audit(team common.Team) {
+	agentsInTeam := team.GetTeamMembers()
+	auditMap := make(map[uuid.UUID]bool)
+	strategyNum := team.GetStrategy()
+
+	for _, agentId := range agentsInTeam {
+		agent := bds.GetAgentMap()[agentId]
+		isAgentCompliant := baseAoA.IsAgentCompliant(agent, strategyNum)
+		auditMap[agentId] = isAgentCompliant
+	}
+
+	team.SetAuditResult(auditMap)
+}
 
 /// Iterates though each team in the server and asks each agent to vote for Articles of Association.
 /// The team's strategy is then set to the most common AoA number.
@@ -163,15 +180,15 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 
 		// Find the AoA number that received the most votes
 		mostCommonAoAs := []int{}
-        for aoa, count := range voteCounts {
-            if count == maxVotes {
-                mostCommonAoAs = append(mostCommonAoAs, aoa)
-            }
-        }
+		for aoa, count := range voteCounts {
+			if count == maxVotes {
+				mostCommonAoAs = append(mostCommonAoAs, aoa)
+			}
+		}
 
 		// randomly select index of the most common AoAs list
 		selectedAoA := mostCommonAoAs[0]
-		if len(mostCommonAoAs) >1 {
+		if len(mostCommonAoAs) > 1 {
 			selectedAoA = mostCommonAoAs[rng.Intn(len(mostCommonAoAs))]
 		}
 
@@ -194,8 +211,8 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 // /// RedistributeCommonPool calls the TakeFromCommonPool function for each agent in the server.
 // /// Each agent will take from the common pool based on their team's strategy.
 // func (bds *BaseDiceServer) RedistributeCommonPool() {
-// 	for _, ag := range bds.GetAgentMap() {	
-// 		// Agents take from the common pool based on their team's strategy	
+// 	for _, ag := range bds.GetAgentMap() {
+// 		// Agents take from the common pool based on their team's strategy
 // 		ag.TakeFromCommonPool()
 // 	}
 // }
