@@ -7,6 +7,7 @@ type Team struct {
 	commonPool  int
 	teamMembers []uuid.UUID
 	strategy    int
+	auditResult map[uuid.UUID]bool // map of agentID -> bool (true if agent is compliant)
 }
 
 func CreateTeam() Team {
@@ -29,6 +30,8 @@ type ITeam interface {
 	AddMember(memberID uuid.UUID)
 	RemoveMember(memberID uuid.UUID)
 	SetStrategy(strategy int)
+	SetAuditResult(agentID uuid.UUID, result bool)
+	GetAuditResult() map[uuid.UUID]bool
 }
 
 func (t *Team) GetTeamID() uuid.UUID {
@@ -63,17 +66,16 @@ func (t *Team) RemoveMember(memberID uuid.UUID) {
 	for i, member := range t.teamMembers {
 		if member == memberID {
 			t.teamMembers = append(t.teamMembers[:i], t.teamMembers[i+1:]...)
-			return 
+			return
 		}
 	}
-} 
-
+}
 
 func (t *Team) AddMember(memberID uuid.UUID) {
 	// Check if the member is already in the team
 	for _, member := range t.teamMembers {
 		if member == memberID {
-			return 
+			return
 		}
 	}
 	t.teamMembers = append(t.teamMembers, memberID)
@@ -81,4 +83,12 @@ func (t *Team) AddMember(memberID uuid.UUID) {
 
 func (t *Team) SetStrategy(strategy int) {
 	t.strategy = strategy
+}
+
+func (t *Team) SetAuditResult(audit map[uuid.UUID]bool) {
+	t.auditResult = audit
+}
+
+func (t *Team) GetAuditResult() map[uuid.UUID]bool {
+	return t.auditResult
 }
