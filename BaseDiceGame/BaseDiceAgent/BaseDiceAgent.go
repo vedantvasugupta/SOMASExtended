@@ -10,8 +10,10 @@ import (
 
 type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
-	team  common.Team
-	score int
+	team             common.Team
+	score            int
+	prevRole         int
+	lastContribution int
 	// memory map[uuid.UUID][]int
 }
 
@@ -23,11 +25,14 @@ type IBaseDiceAgent interface {
 	GetScore() int
 	SetTeam(common.Team)
 	GetTeam() *common.Team
-	
+	SetPrevRole(int)
+	GetPrevRole() int
+	SetCOntribution(int)
+	GetContribution() int
 
 	// -------- The following functions are the ones that the specific agent should implement --
 	DoIStick(int, int) bool
-	MakeContribution() int  // Returns the amount of resources that the agent wants to contribute to the common pool.
+	MakeContribution() int // Returns the amount of resources that the agent wants to contribute to the common pool.
 	TakeFromCommonPool() int
 	// GetVoteForAudit and GetPreferredAoA will be checked each turn, and so the value should be updated each turn accordingly. 0/False if no preference.
 	VoteForAudit() int     // Returns 1 if the agent votes for an audit, 0 for abstain, -1 for no audit.
@@ -35,8 +40,7 @@ type IBaseDiceAgent interface {
 	// -----------------------------------------------------------------------------------------
 }
 
-
-// Sample for later 	
+// Sample for later
 // func CreateDiceAgent (serv baseAgent.IExposedServerFunctions[IBaseDiceAgent]) IBaseDiceAgent{
 // 	return &SpecificDiceAgent{ // REPLACE WITH YOUR SPECIFIC AGENT
 // 		BaseAgent: baseAgent.CreateBaseAgent(serv),
@@ -71,10 +75,11 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 			score = 0
 		}
 	}
+	agent.SetPrevRole(total)
 	agent.SetScore(agent.score + total)
 }
 
-/// Returns the pointer to the Team object that this agent is assigned to
+// / Returns the pointer to the Team object that this agent is assigned to
 func (agent *BaseDiceAgent) GetTeam() *common.Team {
 	return &agent.team
 }
@@ -87,3 +92,18 @@ func (agent *BaseDiceAgent) GetScore() int {
 	return agent.score
 }
 
+func (agent *BaseDiceAgent) SetPrevRole(prevRole int) {
+	agent.prevRole = prevRole
+}
+
+func (agent *BaseDiceAgent) GetPrevRole() int {
+	return agent.prevRole
+}
+
+func (agent *BaseDiceAgent) SetLastCOntribution(contribution int) {
+	agent.lastContribution = contribution
+}
+
+func (agent *BaseDiceAgent) GetLastContribution() int {
+	return agent.lastContribution
+}
