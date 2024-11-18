@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-// NOTES:
-// Need the BaseDiceAgent to have a getter / setter functions for their team, and their score
-// once this is implemented, change any instances of ag.team and ag.score, etc etc to the appropriate getter / setter func.
-
 type IBaseDiceServer interface {
 	baseServer.IServer[baseDiceAgent.IBaseDiceAgent]
 	CreateServer(int, int, int, int, int) *IBaseDiceServer
@@ -178,7 +174,6 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 				maxVotes = count
 				// reset to only have the current AoA in the mostCommonAoAs
 				mostCommonAoAs = []int{AoA}
-				mostCommonAoAs = append(mostCommonAoAs, AoA)
 			} else if count == maxVotes {
 				mostCommonAoAs = append(mostCommonAoAs, AoA)
 			}
@@ -190,21 +185,3 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 	}
 }
 
-// TODO these function have been made redundant, keep for reference
-// /// CollectContributions iterates through all the agents in the server and calls on them to make their contribution to their team's common pool.
-// func (bds *BaseDiceServer) CollectContributions() {
-// 	// iterate through agents and call on them to make their contribution to their teams common pool
-// 	for _, ag := range bds.GetAgentMap() {
-// 		agentTeam := bds.teams[ag.GetTeam().GetTeamID()]
-// 		agentTeam.IncreaseCommonPool(ag.MakeContribution())
-// 	}
-// }
-
-// /// RedistributeCommonPool calls the TakeFromCommonPool function for each agent in the server.
-// /// Each agent will take from the common pool based on their team's strategy.
-// func (bds *BaseDiceServer) RedistributeCommonPool() {
-// 	for _, ag := range bds.GetAgentMap() {
-// 		// Agents take from the common pool based on their team's strategy
-// 		ag.TakeFromCommonPool()
-// 	}
-// }
