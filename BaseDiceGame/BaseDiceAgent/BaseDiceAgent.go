@@ -25,8 +25,8 @@ type IBaseDiceAgent interface {
 	GetScore() int
 	SetTeam(common.Team)
 	GetTeam() *common.Team
-	SetPrevRole(int)
-	GetPrevRole() int
+	SetPrevRoll(int)
+	GetPrevRoll() int
 	SetCOntribution(int)
 	GetContribution() int
 
@@ -75,7 +75,7 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 			score = 0
 		}
 	}
-	agent.SetPrevRole(total)
+	agent.SetPrevRoll(total)
 	agent.SetScore(agent.score + total)
 }
 
@@ -92,11 +92,11 @@ func (agent *BaseDiceAgent) GetScore() int {
 	return agent.score
 }
 
-func (agent *BaseDiceAgent) SetPrevRole(prevRole int) {
+func (agent *BaseDiceAgent) SetPrevRoll(prevRole int) {
 	agent.prevRole = prevRole
 }
 
-func (agent *BaseDiceAgent) GetPrevRole() int {
+func (agent *BaseDiceAgent) GetPrevRoll() int {
 	return agent.prevRole
 }
 
