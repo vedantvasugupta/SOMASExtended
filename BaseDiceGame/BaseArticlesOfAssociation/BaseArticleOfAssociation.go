@@ -12,11 +12,9 @@ type IArticlesOfAssociation interface {
 
     // Method to check how much an agent should take from the common pool
     GetExpectedWithdrawal(agent BaseDiceAgent.IBaseDiceAgent, strategy int) int
-
-
 }
 
 func IsAgentCompliant(agent BaseDiceAgent.IBaseDiceAgent, strategy int) bool {
-    // Placeholder
+    //TODO Placeholder
     return true
 }

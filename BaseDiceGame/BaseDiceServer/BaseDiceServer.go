@@ -157,44 +157,36 @@ func (bds *BaseDiceServer) Audit(team common.Team) {
 /// The team's strategy is then set to the most common AoA number.
 /// If there is a tie, the team's strategy is set to a random AoA number from the most common AoAs.
 func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
-	// Seed the random number generator as rand is pseudo-random
-	// If not seeded the random number generator will produce the same output given the same input
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for _, team := range bds.teams {
 		agentMap := bds.GetAgentMap()
-		voteCounts := make(map[int]int) // Map to count votes for each AoA number
+		// TODO: This should be changed to the max AoA number
+		const MAX_AOA = 10
+		voteCounts := make([]int, MAX_AOA+1)
+		maxVotes := 0
+		var mostCommonAoAs []int
+
 		for _, agentId := range team.GetTeamMembers() {
 			ag := agentMap[agentId]
-			vote := ag.VotePreferredAoA()
-			voteCounts[vote]++
-		}
+			AoA := ag.VotePreferredAoA()
+			voteCounts[AoA]++
 
-		// Find the maximum number of votes any AoA received
-		maxVotes := 0
-		for _, count := range voteCounts {
+			// Update maxVotes and mostCommonAoAs in the same loop
+			count := voteCounts[AoA]
 			if count > maxVotes {
 				maxVotes = count
+				// reset to only have the current AoA in the mostCommonAoAs
+				mostCommonAoAs = []int{AoA}
+				mostCommonAoAs = append(mostCommonAoAs, AoA)
+			} else if count == maxVotes {
+				mostCommonAoAs = append(mostCommonAoAs, AoA)
 			}
 		}
 
-		// Find the AoA number that received the most votes
-		mostCommonAoAs := []int{}
-		for aoa, count := range voteCounts {
-			if count == maxVotes {
-				mostCommonAoAs = append(mostCommonAoAs, aoa)
-			}
-		}
-
-		// randomly select index of the most common AoAs list
-		selectedAoA := mostCommonAoAs[0]
-		if len(mostCommonAoAs) > 1 {
-			selectedAoA = mostCommonAoAs[rng.Intn(len(mostCommonAoAs))]
-		}
-
-		// Set the team's strategy to the selected AoA
+		// Randomly select one AoA from the most common AoAs
+		selectedAoA := mostCommonAoAs[rng.Intn(len(mostCommonAoAs))]
 		team.SetStrategy(selectedAoA)
-
 	}
 }
 
