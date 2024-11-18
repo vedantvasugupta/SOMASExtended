@@ -12,7 +12,7 @@ type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
 	team             common.Team
 	score            int
-	prevRole         int
+	prevRoll         int
 	lastContribution int
 	// memory map[uuid.UUID][]int
 }
@@ -27,8 +27,8 @@ type IBaseDiceAgent interface {
 	GetTeam() *common.Team
 	SetPrevRoll(int)
 	GetPrevRoll() int
-	SetCOntribution(int)
-	GetContribution() int
+	SetLastContribution(int)
+	GetLastContribution() int
 
 	// -------- The following functions are the ones that the specific agent should implement --
 	DoIStick(int, int) bool
@@ -92,18 +92,20 @@ func (agent *BaseDiceAgent) GetScore() int {
 	return agent.score
 }
 
-func (agent *BaseDiceAgent) SetPrevRoll(prevRole int) {
-	agent.prevRole = prevRole
+func (agent *BaseDiceAgent) SetPrevRoll(prevRoll int) {
+	agent.prevRoll = prevRoll
 }
 
 func (agent *BaseDiceAgent) GetPrevRoll() int {
-	return agent.prevRole
+	return agent.prevRoll
 }
 
-func (agent *BaseDiceAgent) SetLastCOntribution(contribution int) {
+func (agent *BaseDiceAgent) SetLastContribution(contribution int) {
 	agent.lastContribution = contribution
 }
 
 func (agent *BaseDiceAgent) GetLastContribution() int {
 	return agent.lastContribution
 }
+
+
