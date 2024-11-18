@@ -157,9 +157,7 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 
 	for _, team := range bds.teams {
 		agentMap := bds.GetAgentMap()
-		// TODO: This should be changed to the max AoA number
-		const MAX_AOA = 10
-		voteCounts := make([]int, MAX_AOA+1)
+		voteCounts := make(map[int]int) // Map to count votes for 
 		maxVotes := 0
 		var mostCommonAoAs []int
 
