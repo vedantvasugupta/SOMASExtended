@@ -92,7 +92,7 @@ func (bds *BaseDiceServer) FormTeams() {
 
 func (bds *BaseDiceServer) runTurn() {
 
-	// Step 1: Vote for Articles of Association
+	// Vote for Articles of Association
 	bds.VoteforArticlesofAssociation()
 
 	for _, team := range bds.teams {
@@ -108,7 +108,7 @@ func (bds *BaseDiceServer) runTurn() {
 		team.IncreaseCommonPool(commonPool)
 	}
 
-	// Step 4: Run the Audit Process
+	// Run the Audit Process
 	for _, team := range bds.teams {
 		agentMap := bds.GetAgentMap()
 		var vote int = 0
@@ -125,7 +125,7 @@ func (bds *BaseDiceServer) runTurn() {
 
 	}
 
-	// Step 5: Redistribute Common Pool
+	// Redistribute Common Pool
 	for _, team := range bds.teams {
 		agentMap := bds.GetAgentMap()
 		for _, agentId := range team.GetTeamMembers() {
