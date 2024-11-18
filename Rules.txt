@@ -1,0 +1,53 @@
+Game Rules:
+Server decides on N rounds and T: - We can decide if T is known by the agents and whether T will change.
+
+Team Formation: 
+-	Either agree to form teams before hand and hard code. (Teams are then fixed)
+-	Randomise some clustering of agents to form teams.
+-	Have some form of grid acting like a ‘map’ agents are arbitrarily moved a random distance, if they’re within a team they are considered 1 entity and agents can decide whether to join a team.
+
+Once teams are formed:
+-	Server goes through each team and starts a vote on strategy (and audit strategy?)
+-	Or have audit fixed.
+
+Round Start:
+-	Server iterates through each team.
+-	Within team, agent rolls dice and decides whether to stick, reroll, contribute etc.
+-	After each agent in the team has broadcasted finish actions, server moves on to next team.
+-	After gone through all teams: server broadcasts and kills players below threshold. 
+
+
+
+
+Agent:
+Vote() – takes in Type of Vote (Strategy or Audit), teamID
+GetTeam() – Returns TeamID of team
+BroadcastFinish()
+DecideAction() -> Returns amount contributed /broadcasts it + amount, includes rolling rerolling etc. 
+ProposeAudit()
+
+
+
+Server:
+Form_Team() :
+-	 Returns a list of teams.
+-	Calls function that handles voting/strategy within each team.
+-	Assigns each agent to a team.
+
+GenerateN():
+GenerateT(): 
+StartRound():
+RunForEachTeam()
+EndRound():
+AddAgent()
+RemoveAgent()
+HandleAudit()
+
+
+
+
+Message:
+CreateBaseMessage()
+MessageTeam()
+SignalFinishMessage()
+VoteMessage()
