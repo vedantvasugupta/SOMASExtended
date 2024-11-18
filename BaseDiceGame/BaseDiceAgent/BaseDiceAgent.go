@@ -12,7 +12,7 @@ type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
 	team             common.Team
 	score            int
-	prevRole         int
+	prevRoll         int
 	lastContribution int
 	// memory map[uuid.UUID][]int
 }
@@ -25,10 +25,10 @@ type IBaseDiceAgent interface {
 	GetScore() int
 	SetTeam(common.Team)
 	GetTeam() *common.Team
-	SetPrevRole(int)
-	GetPrevRole() int
-	SetCOntribution(int)
-	GetContribution() int
+	SetPrevRoll(int)
+	GetPrevRoll() int
+	SetLastContribution(int)
+	GetLastContribution() int
 
 	// -------- The following functions are the ones that the specific agent should implement --
 	DoIStick(int, int) bool
@@ -75,7 +75,7 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 			score = 0
 		}
 	}
-	agent.SetPrevRole(total)
+	agent.SetPrevRoll(total)
 	agent.SetScore(agent.score + total)
 }
 
@@ -92,18 +92,19 @@ func (agent *BaseDiceAgent) GetScore() int {
 	return agent.score
 }
 
-func (agent *BaseDiceAgent) SetPrevRole(prevRole int) {
-	agent.prevRole = prevRole
+func (agent *BaseDiceAgent) SetPrevRoll(prevRoll int) {
+	agent.prevRoll = prevRoll
 }
 
-func (agent *BaseDiceAgent) GetPrevRole() int {
-	return agent.prevRole
-}
-
-func (agent *BaseDiceAgent) SetLastCOntribution(contribution int) {
-	agent.lastContribution = contribution
+func (agent *BaseDiceAgent) GetPrevRoll() int {
+	return agent.prevRoll
 }
 
 func (agent *BaseDiceAgent) GetLastContribution() int {
 	return agent.lastContribution
 }
+
+func (agent *BaseDiceAgent) SetLastContribution(contribution int) {
+	agent.lastContribution = contribution
+}
+
