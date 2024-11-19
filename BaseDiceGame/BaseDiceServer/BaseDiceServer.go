@@ -10,6 +10,7 @@ import (
 
 	"math/rand"
 	"time"
+	"fmt"
 )
 
 type IBaseDiceServer interface {
@@ -113,8 +114,8 @@ func (bds *BaseDiceServer) runTurn() {
 			vote = ag.VoteForAudit()
 		}
 		if vote > 0 {
-			bds.Audit(team)
-		} else{
+			bds.audit(team)
+		} else {
 			// If no agents voted for audit, set the audit result to an empty map
 			team.SetAuditResult(make(map[uuid.UUID]bool))
 		}
@@ -171,9 +172,9 @@ func (bds *BaseDiceServer) generateReport() []Report {
 	var reports []Report // Slice to store reports for each agent
 
 	for _, team := range bds.teams { // Iterate over each team
-		teamCommonPool := team.CommonPool // Retrieve the current team common pool
+		teamCommonPool := team.GetCommonPool() // Retrieve the current team common pool
 
-		for agentID := range team.Agents { // Iterate over each agent in the team
+		for _, agentID := range team.GetTeamMembers() { // Iterate over each agent in the team
 			agent := bds.GetAgentMap()[agentID] // Retrieve the agent by ID
 
 			// Call the agent's BroadcastReport method, which returns a report slice
@@ -194,7 +195,7 @@ func (bds *BaseDiceServer) eliminateAgentsBelowThreshold() {
 	// Iterate over all agents in the game
 	for id, agent := range bds.GetAgentMap() {
 		// Retrieve the agent's current score
-		agentScore := getAgentScore(agent)
+		agentScore := agent.GetScore()
 
 		// Check if the agent's score is below the elimination threshold
 		if agentScore < bds.threshold {
@@ -208,17 +209,21 @@ func (bds *BaseDiceServer) eliminateAgentsBelowThreshold() {
 
 	// Remove each agent who did not meet the threshold from the game
 	for _, id := range agentsToEliminate {
-		removeAgent(id)
+		// Remove the agent from their team
+		bds.removeAgent(id)
 	}
 }
 
-func removeAgent(id uuid.UUID) {
+func (bds *BaseDiceServer) removeAgent(id uuid.UUID) {
+	agent := bds.GetAgentMap()[id]
+	team := agent.GetTeam()
+	team.RemoveMember(id)
 	// Implement logic to remove the agent from the server's agent map
 	delete(bds.GetAgentMap(), id)
 	// Additional cleanup might be necessary
 }
 
-func (bds *BaseDiceServer) audit(agent *BaseDiceAgent, team *Team) bool {
+func (bds *BaseDiceServer) audit(agent *baseDiceAgent.BaseDiceAgent, team *common.Team) bool {
 	// Retrieve the contribution rule function and audit failure strategy
 	contributionRuleFunction := team.ArticlesOfAssociation.ContributionRule // Function to calculate required contribution per round
 	auditFailureStrategy := team.ArticlesOfAssociation.AuditFailureStrategy // Function to handle actions when audit fails
@@ -235,7 +240,7 @@ func (bds *BaseDiceServer) audit(agent *BaseDiceAgent, team *Team) bool {
 		// Check if actual contribution meets expected contribution
 		if actualContribution < expectedContribution {
 			// Audit fails: contribution does not meet the required amount
-			team.CommonPool -= auditCost // Deduct audit cost from team’s common pool
+			team.DecreaseCommonPool(auditCost) // Deduct audit cost from team’s common pool
 
 			// Call the team’s audit failure strategy
 			auditFailureStrategy(agent, team) // Execute team-defined actions on audit failure
