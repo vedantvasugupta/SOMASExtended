@@ -132,23 +132,6 @@ func (bds *BaseDiceServer) runTurn() {
 
 }
 
-/// Audit verifies that each agent has contributed the expected amount to the common pool.
-/// An audit is based on the team's strategy and the information the server has about the agents.
-/// Provides the expected contributions
-func (bds *BaseDiceServer) Audit(team common.Team) {
-	agentsInTeam := team.GetTeamMembers()
-	auditMap := make(map[uuid.UUID]bool)
-	strategyNum := team.GetStrategy()
-
-	for _, agentId := range agentsInTeam {
-		agent := bds.GetAgentMap()[agentId]
-		isAgentCompliant := baseAoA.IsAgentCompliant(agent, strategyNum)
-		auditMap[agentId] = isAgentCompliant
-	}
-
-	team.SetAuditResult(auditMap)
-}
-
 /// Iterates though each team in the server and asks each agent to vote for Articles of Association.
 /// The team's strategy is then set to the most common AoA number.
 /// If there is a tie, the team's strategy is set to a random AoA number from the most common AoAs.
@@ -157,7 +140,7 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 
 	for _, team := range bds.teams {
 		agentMap := bds.GetAgentMap()
-		voteCounts := make(map[int]int) // Map to count votes for 
+		voteCounts := make(map[int]int) // Map to count votes for
 		maxVotes := 0
 		var mostCommonAoAs []int
 
@@ -183,3 +166,85 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 	}
 }
 
+// generateReport generates and returns a report for each agent, including team common pool and agent-specific history.
+func (bds *BaseDiceServer) generateReport() []Report {
+	var reports []Report // Slice to store reports for each agent
+
+	for _, team := range bds.teams { // Iterate over each team
+		teamCommonPool := team.CommonPool // Retrieve the current team common pool
+
+		for agentID := range team.Agents { // Iterate over each agent in the team
+			agent := bds.GetAgentMap()[agentID] // Retrieve the agent by ID
+
+			// Call the agent's BroadcastReport method, which returns a report slice
+			agentReports := agent.BroadcastReport(teamCommonPool)
+
+			// Append the agent's report(s) to the main reports slice
+			reports = append(reports, agentReports...)
+		}
+	}
+
+	return reports // Return the slice of all reports generated
+}
+
+func (bds *BaseDiceServer) eliminateAgentsBelowThreshold() {
+	// Create a slice to store the IDs of agents who will be eliminated
+	var agentsToEliminate []uuid.UUID
+
+	// Iterate over all agents in the game
+	for id, agent := range bds.GetAgentMap() {
+		// Retrieve the agent's current score
+		agentScore := getAgentScore(agent)
+
+		// Check if the agent's score is below the elimination threshold
+		if agentScore < bds.threshold {
+			// Add the agent's ID to the list of agents to eliminate
+			agentsToEliminate = append(agentsToEliminate, id)
+
+			// Notify that the agent will be eliminated
+			fmt.Printf("Agent %s did not meet the threshold of %d and will be eliminated.\n", id, bds.threshold)
+		}
+	}
+
+	// Remove each agent who did not meet the threshold from the game
+	for _, id := range agentsToEliminate {
+		removeAgent(id)
+	}
+}
+
+func removeAgent(id uuid.UUID) {
+	// Implement logic to remove the agent from the server's agent map
+	delete(bds.GetAgentMap(), id)
+	// Additional cleanup might be necessary
+}
+
+func (bds *BaseDiceServer) audit(agent *BaseDiceAgent, team *Team) bool {
+	// Retrieve the contribution rule function and audit failure strategy
+	contributionRuleFunction := team.ArticlesOfAssociation.ContributionRule // Function to calculate required contribution per round
+	auditFailureStrategy := team.ArticlesOfAssociation.AuditFailureStrategy // Function to handle actions when audit fails
+	auditCost := team.ArticlesOfAssociation.AuditCost                       // Retrieve audit cost from AoA
+
+	// Iterate over each turn record in the agent’s memory
+	for _, turnRecord := range agent.memory[agent.GetID()] {
+		totalScore := turnRecord.TotalScore           // Total score rolled in this turn
+		actualContribution := turnRecord.Contribution // Actual contribution made by the agent in this turn
+
+		// Calculate expected contribution using the team strategy function
+		expectedContribution := contributionRuleFunction(totalScore)
+
+		// Check if actual contribution meets expected contribution
+		if actualContribution < expectedContribution {
+			// Audit fails: contribution does not meet the required amount
+			team.CommonPool -= auditCost // Deduct audit cost from team’s common pool
+
+			// Call the team’s audit failure strategy
+			auditFailureStrategy(agent, team) // Execute team-defined actions on audit failure
+
+			// Return true indicating the agent cheated
+			return true
+		}
+	}
+
+	// Return false if no failures found (agent did not cheat)
+	return false
+}
