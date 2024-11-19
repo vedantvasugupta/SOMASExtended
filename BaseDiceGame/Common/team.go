@@ -1,4 +1,4 @@
-package Common
+package common
 
 import "github.com/google/uuid"
 
@@ -6,7 +6,7 @@ type Team struct {
 	teamID      uuid.UUID
 	commonPool  int
 	teamMembers []uuid.UUID
-	strategy    int
+	articlesOfAssociation ArticlesOfAssociation
 	auditResult map[uuid.UUID]bool // map of agentID -> bool (true if agent is compliant)
 }
 
@@ -15,7 +15,6 @@ func CreateTeam() Team {
 		teamID:      uuid.New(),    // Generate a unique TeamID
 		commonPool:  0,             // Initialize commonPool to 0
 		teamMembers: []uuid.UUID{}, // Initialize an empty slice of agent UUIDs
-		strategy:    0,             // Initialize strategy as 0
 	}
 }
 
@@ -23,13 +22,11 @@ type ITeam interface {
 	GetTeamID() uuid.UUID
 	GetCommonPool() int
 	GetTeamMembers() []uuid.UUID
-	GetStrategy() int
 	IncreaseCommonPool(int)
 	DecreaseCommonPool(amount int)
 	ResetCommonPool()
 	AddMember(memberID uuid.UUID)
 	RemoveMember(memberID uuid.UUID)
-	SetStrategy(strategy int)
 	SetAuditResult(agentID uuid.UUID, result bool)
 	GetAuditResult() map[uuid.UUID]bool
 }
@@ -44,10 +41,6 @@ func (t *Team) GetCommonPool() int {
 
 func (t *Team) GetTeamMembers() []uuid.UUID {
 	return t.teamMembers
-}
-
-func (t *Team) GetStrategy() int {
-	return t.strategy
 }
 
 func (t *Team) IncreaseCommonPool(amount int) {
@@ -79,10 +72,6 @@ func (t *Team) AddMember(memberID uuid.UUID) {
 		}
 	}
 	t.teamMembers = append(t.teamMembers, memberID)
-}
-
-func (t *Team) SetStrategy(strategy int) {
-	t.strategy = strategy
 }
 
 func (t *Team) SetAuditResult(audit map[uuid.UUID]bool) {

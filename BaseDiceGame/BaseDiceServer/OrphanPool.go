@@ -11,15 +11,15 @@ import (
 * put the team it most wants to join at the start of the slice. */
 type orphanPool map[uuid.UUID][]uuid.UUID
 var pool = make(orphanPool)
-// TODO: Probably make the orphanPool an attribute of the BDS struct? 
+// TODO: Probably make the orphanPool an attribute of the BDS struct?
 
 // The percentage of agents that have to vote 'accept' in order for an orphan
 // to be taken into a team
-const MajorityVoteThreshold float32 = 0.7 
+const MajorityVoteThreshold float32 = 0.7
 
-/* 
+/*
 * Print the contents of the pool. Careful as this will not necessarily print
-* the elements in the order that you added them. 
+* the elements in the order that you added them.
 */
 func (pool orphanPool) Print() {
     for i, v := range pool {
@@ -37,17 +37,17 @@ func (pool orphanPool) Print() {
 }
 
 func GetAgentVoteFromId(orphanID, agentID uuid.UUID) bool {
-    // TODO: how do we get the vote from the agents? 
+    // TODO: how do we get the vote from the agents?
     return true
 }
 
 /*
-* Return a function (closure) for counting up the total votes in a team. 
+* Return a function (closure) for counting up the total votes in a team.
 */
 func voteAdder() func(bool) int {
     // An instance of this 'votes' var will be created for each closure
     // created. Whenever that closure is called, it will increment its own copy
-    // of votes! No need to keep data in another data structure. 
+    // of votes! No need to keep data in another data structure.
     votes := 0
     return func(agent_vote bool) int {
         // increment the total number of votes only if the agent returned
@@ -68,11 +68,11 @@ func (bds * BaseDiceServer) AllocateOrphans() {
         for _, teamID := range teamsList {
             // get the members of that team, if the team exists
             team, ok := bds.teams[teamID]
-            if !ok { 
+            if !ok {
                 // if the orphan is trying to join a team that does not exist,
                 // make a not of this but do not kill the program. 
                 fmt.Print("Orphan ", orphan, " tried to join team ", teamID, " which does not exist")
-                continue 
+                continue
             }
             // otherwise, add the vote of each member
             adder := voteAdder()
@@ -84,13 +84,12 @@ func (bds * BaseDiceServer) AllocateOrphans() {
 
             // calculate the percentage of agents that voted yes
             acceptancePercentage := float32(votes) / float32(len(members))
-            
             // add agent to team only if acceptance is above percentage
             if acceptancePercentage >= MajorityVoteThreshold {
                 // add the orphan to the team
-                team.AddMember(orphan) 
+                team.AddMember(orphan)
                 // tell the orphan what team it now belongs to
-                bds.GetAgentMap()[orphan].SetTeam(team) 
+                bds.GetAgentMap()[orphan].SetTeamId(team.GetTeamID())
                 // move onto the next orphan in the pool
                 delete(pool, orphan)
                 break
@@ -106,8 +105,8 @@ func RunTests() {
     pool = orphanPool{
         uuid.New(): {uuid.New(), uuid.New(), uuid.New()},
         uuid.New(): {uuid.New(), uuid.New(), uuid.New(), uuid.New(), uuid.New()},
-        uuid.New(): {}, // outcast, does not want to join any team. 
-        uuid.New(): {uuid.New()}, 
+        uuid.New(): {}, // outcast, does not want to join any team.
+        uuid.New(): {uuid.New()},
     }
 
     pool.Print()

@@ -1,19 +1,20 @@
 package BaseDiceAgent
 
 import (
-	common "SOMASExtended/BaseDiceGame/Common"
 	rand "math/rand"
 
 	baseAgent "github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
+	"github.com/google/uuid"
 	// uuid "github.com/google/uuid"
 )
 
 type BaseDiceAgent struct {
 	*baseAgent.BaseAgent[IBaseDiceAgent]
-	team             common.Team
+	teamId           uuid.UUID
 	score            int
 	prevRoll         int
 	lastContribution int
+	auditViolations  int
 	// memory map[uuid.UUID][]int
 }
 
@@ -23,12 +24,14 @@ type IBaseDiceAgent interface {
 	RollDice(IBaseDiceAgent)
 	SetScore(int)
 	GetScore() int
-	SetTeam(common.Team)
-	GetTeam() *common.Team
+	SetTeamId(uuid.UUID)
+	GetTeamId() uuid.UUID
 	SetPrevRoll(int)
 	GetPrevRoll() int
 	SetLastContribution(int)
 	GetLastContribution() int
+	GetAuditViolations() int
+	AddAuditViolation()
 
 	// -------- The following functions are the ones that the specific agent should implement --
 	DoIStick(int, int) bool
@@ -80,8 +83,8 @@ func (agent *BaseDiceAgent) RollDice(specificAgent IBaseDiceAgent) {
 }
 
 // / Returns the pointer to the Team object that this agent is assigned to
-func (agent *BaseDiceAgent) GetTeam() *common.Team {
-	return &agent.team
+func (agent *BaseDiceAgent) GetTeamId() uuid.UUID {
+	return agent.teamId
 }
 
 func (agent *BaseDiceAgent) SetScore(score int) {
@@ -108,4 +111,10 @@ func (agent *BaseDiceAgent) GetLastContribution() int {
 	return agent.lastContribution
 }
 
+func (agent *BaseDiceAgent) GetAuditViolations() int {
+	return agent.auditViolations
+}
 
+func (agent *BaseDiceAgent) AddAuditViolation() {
+	agent.auditViolations++
+}

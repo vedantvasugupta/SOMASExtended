@@ -3,7 +3,6 @@ package BaseDiceServer
 import (
 	baseDiceAgent "SOMASExtended/BaseDiceGame/BaseDiceAgent"
 	common "SOMASExtended/BaseDiceGame/Common"
-	baseAoA "SOMASExtended/BaseDiceGame/BaseArticlesOfAssociation"
 
 	baseServer "github.com/MattSScott/basePlatformSOMAS/v2/pkg/server"
 	uuid "github.com/google/uuid"
@@ -216,7 +215,8 @@ func (bds *BaseDiceServer) eliminateAgentsBelowThreshold() {
 
 func (bds *BaseDiceServer) removeAgent(id uuid.UUID) {
 	agent := bds.GetAgentMap()[id]
-	team := agent.GetTeam()
+	teamId := agent.GetTeamId()
+	team := bds.teams[teamId]
 	team.RemoveMember(id)
 	// Implement logic to remove the agent from the server's agent map
 	delete(bds.GetAgentMap(), id)
