@@ -33,7 +33,9 @@ type IExtendedAgent interface {
 	// Info
 	GetExposedInfo() ExposedAgentInfo
 	LogSelfInfo()
-
+	GetAoARanking() []int
+	SetAoARanking(Preferences []int)
+  
 	ContributeToCommonPool() int
 	WithdrawFromCommonPool() int
 	SetCommonPoolValue(pool int)

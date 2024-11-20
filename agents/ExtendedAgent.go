@@ -27,6 +27,9 @@ type ExtendedAgent struct {
 
 	// debug
 	verboseLevel int
+
+	// AoA vote
+	AoARanking []int
 }
 
 type AgentConfig struct {
@@ -36,10 +39,11 @@ type AgentConfig struct {
 
 func GetBaseAgents(funcs agent.IExposedServerFunctions[common.IExtendedAgent], configParam AgentConfig) *ExtendedAgent {
 	return &ExtendedAgent{
-		BaseAgent:    agent.CreateBaseAgent(funcs),
-		server:       funcs.(common.IServer), // Type assert the server functions to IServer interface
-		score:        configParam.InitScore,
-		verboseLevel: configParam.VerboseLevel,
+		BaseAgent:    	agent.CreateBaseAgent(funcs),
+		server:       	funcs.(common.IServer), // Type assert the server functions to IServer interface
+		score:        	configParam.InitScore,
+		verboseLevel: 	configParam.VerboseLevel,
+		AoARanking: 	[]int{3,2,1,0},
 	}
 }
 
@@ -299,6 +303,16 @@ func (mi *ExtendedAgent) SetTeamID(teamID uuid.UUID) {
 	mi.teamID = teamID
 }
 
+// In RunStartOfIteration, the server loops through each agent in each team
+// and sets the teams AoA by majority vote from the agents in that team.
+func (mi *ExtendedAgent) SetAoARanking(Preferences []int) {
+	mi.AoARanking = Preferences
+}
+
+func (mi *ExtendedAgent) GetAoARanking() []int {
+	return mi.AoARanking
+}
+  
 func (mi *ExtendedAgent) SetCommonPoolValue(poolValue int) {
 	mi.commonPoolValue = poolValue
 	fmt.Printf("setting common pool to %d\n", poolValue)

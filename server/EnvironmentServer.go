@@ -16,12 +16,16 @@ import (
 type EnvironmentServer struct {
 	*server.BaseServer[common.IExtendedAgent]
 
-	teamsMutex    sync.RWMutex
-	agentInfoList []common.ExposedAgentInfo
-	teams         map[uuid.UUID]common.Team
+	teamsMutex    		sync.RWMutex
+	agentInfoList 		[]common.ExposedAgentInfo
+	teams         		map[uuid.UUID]common.Team
 
 	roundScoreThreshold int
 	deadAgents          []common.IExtendedAgent
+
+
+	// set of options for team strategies (agents rank these options)
+	aoaMenu  			[]*common.ArticlesOfAssociation
 }
 
 // overrides that requires implementation
@@ -59,6 +63,36 @@ func (cs *EnvironmentServer) RunStartOfIteration(int) {
 	cs.CreateNewRoundScoreThreshold()
 	// start team forming
 
+	// take votes at team level and allocate Strategy.
+	cs.AllocateAoAs()
+}
+
+// Allocate AoA based on team votes;
+// for each member in team, count vote for AoA and then take majority (?) vote
+// assign majority vote back to team struct (team.Strategy)
+func (cs *EnvironmentServer) AllocateAoAs(){
+	// once teams assigned, gather AoA votes from each agent.
+	for _, team := range cs.teams {
+		// ranking cache for each team.
+		var voteSum = []int{0,0,0,0}
+		for _, agent := range team.Agents {
+			for aoa, vote := range cs.GetAgentMap()[agent].GetAoARanking() {
+				voteSum[aoa] += vote
+			}
+		}
+		// logic to check largest
+		var currentMax = 0
+		var preference = 0
+		for aoa, voteCount := range voteSum{
+			if voteCount > currentMax{
+				currentMax = voteCount
+				preference = aoa
+			}
+		}
+
+		// update teams strategy. 
+		team.TeamAoA = cs.aoaMenu[preference]
+	}
 }
 
 func (cs *EnvironmentServer) RunEndOfIteration(int) {
@@ -88,6 +122,38 @@ func MakeEnvServer(numAgent int, iterations int, turns int, maxDuration time.Dur
 		agent := agents.GetBaseAgents(serv, agentConfig)
 		serv.AddAgent(agent)
 	}
+
+	serv.aoaMenu = []*common.ArticlesOfAssociation{nil, nil, nil, nil}
+
+	// for now, menu just has 4 choices of AoA. TBC.
+	serv.aoaMenu[0] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(10),
+		common.CreateFixedWithdrawalRule(10),
+		common.CreateFixedAuditCost(10),
+		common.CreateFixedPunishment(10),
+	)
+
+	serv.aoaMenu[1] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(20),
+		common.CreateFixedWithdrawalRule(20),
+		common.CreateFixedAuditCost(20),
+		common.CreateFixedPunishment(20),
+	)
+
+	serv.aoaMenu[2] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(30),
+		common.CreateFixedWithdrawalRule(30),
+		common.CreateFixedAuditCost(30),
+		common.CreateFixedPunishment(30),
+	)
+
+	serv.aoaMenu[3] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(40),
+		common.CreateFixedWithdrawalRule(40),
+		common.CreateFixedAuditCost(40),
+		common.CreateFixedPunishment(40),
+	)
+
 
 	return serv
 }
