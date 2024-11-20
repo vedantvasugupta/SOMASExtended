@@ -14,6 +14,7 @@ type IExtendedAgent interface {
 
 	// Setters
 	SetTeamID(teamID uuid.UUID)
+	SetTrueScore(score int)
 	StartRollingDice()
 	StickOrAgain() bool
 	DecideStick()
@@ -32,4 +33,8 @@ type IExtendedAgent interface {
 	// Info
 	GetExposedInfo() ExposedAgentInfo
 	LogSelfInfo()
+
+	ContributeToCommonPool() int
+	WithdrawFromCommonPool() int
+	SetCommonPoolValue(pool int)
 }

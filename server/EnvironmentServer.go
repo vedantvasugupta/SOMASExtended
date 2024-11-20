@@ -26,15 +26,29 @@ type EnvironmentServer struct {
 
 // overrides that requires implementation
 func (cs *EnvironmentServer) RunTurn(i, j int) {
-	fmt.Printf("\nTurn %v, %v, current agent count: %v\n", i, j, len(cs.GetAgentMap()))
+	fmt.Printf("\nIteration %v, Turn %v, current agent count: %v\n", i, j, len(cs.GetAgentMap()))
 
 	if j == 0 {
 		cs.StartAgentTeamForming()
-
 	} else { // debug roll dice for agents
 		for _, agent := range cs.GetAgentMap() {
 			if !cs.IsAgentDead(agent.GetID()) { // only agents that are alive can roll dice
 				agent.StartRollingDice()
+				team := cs.teams[agent.GetTeamID()]
+				agentContribution := agent.ContributeToCommonPool()
+				team.CommonPool += agentContribution
+				cs.teams[agent.GetTeamID()] = team
+				agent.SetTrueScore(agent.GetTrueScore() - agentContribution)
+			}
+		}
+		cs.UpdateCommonPools()
+		for _, agent := range cs.GetAgentMap() {
+			if !cs.IsAgentDead(agent.GetID()) {
+				team := cs.teams[agent.GetTeamID()]
+				agentWithdrawal := agent.WithdrawFromCommonPool()
+				team.CommonPool -= agentWithdrawal
+				cs.teams[agent.GetTeamID()] = team
+				agent.SetTrueScore(agent.GetTrueScore() + agentWithdrawal)
 			}
 		}
 	}
@@ -233,4 +247,25 @@ func (cs *EnvironmentServer) CreateAndInitTeamWithAgents(agentIDs []uuid.UUID) u
 
 	fmt.Printf("[server] Created team %v with agents %v\n", teamID, agentIDs)
 	return teamID
+}
+
+/*
+* Update each agent's Common Pool value. For each team, check the value of its
+* pool, and update that value in each of the agents part of that team.
+ */
+func (cs *EnvironmentServer) UpdateCommonPools() {
+
+	// acquire mutex
+	cs.teamsMutex.Lock()
+	defer cs.teamsMutex.Unlock()
+
+	agent_map := cs.GetAgentMap()
+	for _, team := range cs.teams {
+		// Get the value of the common pool
+		pool := team.CommonPool
+		// Distribute it amongst all the agents
+		for _, agentID := range team.Agents {
+			agent_map[agentID].SetCommonPoolValue(pool)
+		}
+	}
 }
