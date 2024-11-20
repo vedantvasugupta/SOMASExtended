@@ -26,7 +26,7 @@ type ExtendedAgent struct {
 	verboseLevel int
 
 	// AoA vote
-	AoARanking [6]int
+	AoARanking [4]int
 }
 
 type AgentConfig struct {
@@ -285,5 +285,5 @@ func (mi *ExtendedAgent) SetTeamID(teamID uuid.UUID) {
 // In RunStartOfIteration, the server loops through each agent in each team
 // and sets the teams AoA by majority vote from the agents in that team.
 func (mi *ExtendedAgent) SetAgentAoA() {
-	mi.AoARanking = [0,0,0,0,0,0]
+	mi.AoARanking = [3,2,1,0] // set constant vote for now
 }

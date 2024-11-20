@@ -16,12 +16,16 @@ import (
 type EnvironmentServer struct {
 	*server.BaseServer[common.IExtendedAgent]
 
-	teamsMutex    sync.RWMutex
-	agentInfoList []common.ExposedAgentInfo
-	teams         map[uuid.UUID]common.Team
+	teamsMutex    		sync.RWMutex
+	agentInfoList 		[]common.ExposedAgentInfo
+	teams         		map[uuid.UUID]common.Team
 
 	roundScoreThreshold int
 	deadAgents          []common.IExtendedAgent
+
+
+	// set of options for team strategies (agents rank these options)
+	aoaMenu  			[]ArticlesOfAssociation
 }
 
 // overrides that requires implementation
@@ -56,21 +60,24 @@ func (cs *EnvironmentServer) AllocateAoAs(){
 	// once teams assigned, gather AoA votes from each agent.
 	for _, team := range cs.teams {
 		// ranking cache for each team.
-		voteSum = []
+		voteSum = [0,0,0,0]
 		for _, agent := range team.Agents {
 			for aoa, vote := range agent.AoARanking{}
 			// accumulate vote from each agent in team
 			voteSum[aoa] += vote
 		}
 		// logic to check largest
-		maxVote = 0
-		for _, sum := range voteSum {
-			if sum > maxVote{
-				maxVote = sum
+		currentMax = 0
+		preference = 0
+		for aoa, voteCount := range voteSum{
+			if voteCount > currentMax{
+				currentMax = voteCount
+				preference = aoa
 			}
 		}
+
 		// update teams strategy. 
-		team.Strategy = maxVote
+		team.TeamAoA = aoaMenu[preference]
 	}
 }
 
@@ -101,6 +108,36 @@ func MakeEnvServer(numAgent int, iterations int, turns int, maxDuration time.Dur
 		agent := agents.GetBaseAgents(serv, agentConfig)
 		serv.AddAgent(agent)
 	}
+
+	// for now, menu just has 4 choices of AoA. TBC.
+	aoaMenu[0] = CreateArticlesOfAssociation(
+		CreateFixedContributionRule(10),
+		CreateFixedWithdrawalRule(10),
+		CreateFixedAuditCost(10),
+		CreateFixedPunishment(10),
+	)
+
+	aoaMenu[1] = CreateArticlesOfAssociation(
+		CreateFixedContributionRule(20),
+		CreateFixedWithdrawalRule(20),
+		CreateFixedAuditCost(20),
+		CreateFixedPunishment(20),
+	)
+
+	aoaMenu[2] = CreateArticlesOfAssociation(
+		CreateFixedContributionRule(30),
+		CreateFixedWithdrawalRule(30),
+		CreateFixedAuditCost(30),
+		CreateFixedPunishment(30),
+	)
+
+	aoaMenu[3] = CreateArticlesOfAssociation(
+		CreateFixedContributionRule(40),
+		CreateFixedWithdrawalRule(40),
+		CreateFixedAuditCost(40),
+		CreateFixedPunishment(40),
+	)
+
 
 	return serv
 }
