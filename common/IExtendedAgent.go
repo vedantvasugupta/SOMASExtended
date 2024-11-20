@@ -5,8 +5,8 @@ import (
 	"github.com/google/uuid"
 )
 
-type IMI_256 interface {
-	agent.IAgent[IMI_256]
+type IExtendedAgent interface {
+	agent.IAgent[IExtendedAgent]
 
 	// Getters
 	GetTeamID() uuid.UUID

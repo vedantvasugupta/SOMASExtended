@@ -7,6 +7,6 @@ import (
 
 // IExtendedMessage defines the interface for messages in the system
 type IExtendedMessage interface {
-	message.IMessage[IMI_256]
+	message.IMessage[IExtendedAgent]
 	GetTeamID() uuid.UUID
 }

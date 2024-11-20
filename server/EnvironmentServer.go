@@ -1,8 +1,8 @@
 package environmentServer
 
 import (
-	"MI_256/agents"
-	"MI_256/common"
+	"SOMAS_Extended/agents"
+	"SOMAS_Extended/common"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -14,14 +14,14 @@ import (
 )
 
 type EnvironmentServer struct {
-	*server.BaseServer[common.IMI_256]
+	*server.BaseServer[common.IExtendedAgent]
 
 	teamsMutex    sync.RWMutex
 	agentInfoList []common.ExposedAgentInfo
 	teams         map[uuid.UUID]common.Team
 
 	roundScoreThreshold int
-	deadAgents          []common.IMI_256
+	deadAgents          []common.IExtendedAgent
 }
 
 // overrides that requires implementation
@@ -64,7 +64,7 @@ func (cs *EnvironmentServer) Start() {
 // constructor
 func MakeEnvServer(numAgent int, iterations int, turns int, maxDuration time.Duration, maxThread int, agentConfig agents.AgentConfig) *EnvironmentServer {
 	serv := &EnvironmentServer{
-		BaseServer: server.CreateBaseServer[common.IMI_256](iterations, turns, maxDuration, maxThread),
+		BaseServer: server.CreateBaseServer[common.IExtendedAgent](iterations, turns, maxDuration, maxThread),
 		teams:      make(map[uuid.UUID]common.Team),
 	}
 	serv.SetGameRunner(serv)

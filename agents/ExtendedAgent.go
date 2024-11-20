@@ -6,14 +6,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"MI_256/common"
-	"MI_256/messages"
+	"SOMAS_Extended/common"
+	"SOMAS_Extended/messages"
 
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
 )
 
 type ExtendedAgent struct {
-	*agent.BaseAgent[common.IMI_256]
+	*agent.BaseAgent[common.IExtendedAgent]
 	server common.IServer
 	score  int
 
@@ -31,7 +31,7 @@ type AgentConfig struct {
 	VerboseLevel int
 }
 
-func GetBaseAgents(funcs agent.IExposedServerFunctions[common.IMI_256], configParam AgentConfig) *ExtendedAgent {
+func GetBaseAgents(funcs agent.IExposedServerFunctions[common.IExtendedAgent], configParam AgentConfig) *ExtendedAgent {
 	return &ExtendedAgent{
 		BaseAgent:    agent.CreateBaseAgent(funcs),
 		server:       funcs.(common.IServer), // Type assert the server functions to IServer interface

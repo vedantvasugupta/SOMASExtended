@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"MI_256/common"
+	"SOMAS_Extended/common"
 
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/message"
 	"github.com/google/uuid"
@@ -16,6 +16,6 @@ func (m ExtendedMessage) GetTeamID() uuid.UUID {
 	return m.TeamID
 }
 
-func (m *ExtendedMessage) InvokeMessageHandler(mi common.IMI_256) {
+func (m *ExtendedMessage) InvokeMessageHandler(mi common.IExtendedAgent) {
 	mi.ReceiveMessage(m)
 }

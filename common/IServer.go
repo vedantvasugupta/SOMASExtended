@@ -6,7 +6,7 @@ import (
 )
 
 type IServer interface {
-	agent.IExposedServerFunctions[IMI_256]
+	agent.IExposedServerFunctions[IExtendedAgent]
 	// Team management functions
 	CreateTeam()
 	AddAgentToTeam(agentID uuid.UUID, teamID uuid.UUID)

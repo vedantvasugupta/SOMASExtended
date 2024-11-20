@@ -1,6 +1,6 @@
 package messages
 
-import "MI_256/common"
+import "SOMAS_Extended/common"
 
 type TeamFormingInvitationMessage struct {
 	ExtendedMessage
@@ -16,6 +16,6 @@ func (tm *TeamFormingInvitationMessage) GetAgentInfo() common.ExposedAgentInfo {
 	return tm.AgentInfo
 }
 
-func (tm *TeamFormingInvitationMessage) InvokeMessageHandler(agent common.IMI_256) {
+func (tm *TeamFormingInvitationMessage) InvokeMessageHandler(agent common.IExtendedAgent) {
 	agent.ReceiveMessage(tm)
 }

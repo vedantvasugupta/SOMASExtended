@@ -86,11 +86,11 @@ log agents thaat are alive and dead, their score, and teams that are formed.
 📦 SOMASExtended
 ├── 📂 agents
 │   ├── ExtendedAgent.go
-│   └── MI_256_v1.go
+│   └── SOMAS_Extended_v1.go
 ├── 📂 common
 │   ├── ExposedAgentInfo.go
 │   ├── IExtendedMessage.go
-│   ├── IMI_256.go
+│   ├── ISOMAS_Extended.go
 │   ├── IServer.go
 │   └── team.go
 ├── 📂 messages
@@ -99,7 +99,7 @@ log agents thaat are alive and dead, their score, and teams that are formed.
 │   └── TeamFormingInvitationMessage.go
 ├── 📂 server
 │   └── EnvironmentServer.go
-└── MI_256.go
+└── SOMAS_Extended.go
 ```
 
 ## Final Note
@@ -113,7 +113,7 @@ However, I hope the work here will be useful for you! Let us know (Team 4, or St
 Why there are so many interfaces?
 - because golang hates cyclic dependency. For example, for server to call agent functions and agent to call server functions at the same time, it will cause circular dependency. But - if we put interfaces in a common package, we can avoid this problem.
 
-why is the main called MI_256.go?
+why is the main called SOMAS_Extended.go?
 - because that's the name of agent in our original project (military intelligence agent 256). Rename it as you like!
 
 This project architecture is very different from the current one!

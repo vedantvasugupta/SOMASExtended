@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"MI_256/common"
+	"SOMAS_Extended/common"
 )
 
 type introductionMessage struct {
@@ -13,7 +13,7 @@ func (tm *introductionMessage) GetMessage() string {
 	return tm.Message
 }
 
-func (tm *introductionMessage) InvokeMessageHandler(agent common.IMI_256) {
+func (tm *introductionMessage) InvokeMessageHandler(agent common.IExtendedAgent) {
 	agent.ReceiveMessage(tm)
 }
 
