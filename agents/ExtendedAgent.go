@@ -26,7 +26,7 @@ type ExtendedAgent struct {
 	verboseLevel int
 
 	// AoA vote
-	AoARanking [4]int
+	AoARanking []int
 }
 
 type AgentConfig struct {
@@ -36,10 +36,11 @@ type AgentConfig struct {
 
 func GetBaseAgents(funcs agent.IExposedServerFunctions[common.IExtendedAgent], configParam AgentConfig) *ExtendedAgent {
 	return &ExtendedAgent{
-		BaseAgent:    agent.CreateBaseAgent(funcs),
-		server:       funcs.(common.IServer), // Type assert the server functions to IServer interface
-		score:        configParam.InitScore,
-		verboseLevel: configParam.VerboseLevel,
+		BaseAgent:    	agent.CreateBaseAgent(funcs),
+		server:       	funcs.(common.IServer), // Type assert the server functions to IServer interface
+		score:        	configParam.InitScore,
+		verboseLevel: 	configParam.VerboseLevel,
+		AoARanking: 	[]int{3,2,1,0},
 	}
 }
 
@@ -284,6 +285,10 @@ func (mi *ExtendedAgent) SetTeamID(teamID uuid.UUID) {
 
 // In RunStartOfIteration, the server loops through each agent in each team
 // and sets the teams AoA by majority vote from the agents in that team.
-func (mi *ExtendedAgent) SetAgentAoA() {
-	mi.AoARanking = [3,2,1,0] // set constant vote for now
+func (mi *ExtendedAgent) SetAoARanking(Preferences []int) {
+	mi.AoARanking = Preferences
+}
+
+func (mi *ExtendedAgent) GetAoARanking() []int {
+	return mi.AoARanking
 }

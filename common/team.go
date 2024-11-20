@@ -23,14 +23,14 @@ func NewTeam() Team {
 }
 
 func (team *Team) SetContributionResult(agentID uuid.UUID, agentScore int, agentActualContribution int) {
-	agentExpectedContribution := team.ArticlesOfAssociation.contributionRule.GetExpectedContributionAmount(agentScore)
+	agentExpectedContribution := team.TeamAoA.contributionRule.GetExpectedContributionAmount(agentScore)
 	if agentActualContribution != agentExpectedContribution {
 		team.AuditResult[agentID] = team.AuditResult[agentID] || true // There is a deferral
 	}
 }
 
 func (team *Team) SetWithdrawalResult(agentID uuid.UUID, agentScore int, agentActualWithdrawal int) {
-	agentExpectedWithdrawal := team.ArticlesOfAssociation.withdrawalRule.GetExpectedWithdrawalAmount(agentScore)
+	agentExpectedWithdrawal := team.TeamAoA.withdrawalRule.GetExpectedWithdrawalAmount(agentScore)
 	if agentActualWithdrawal != agentExpectedWithdrawal {
 		team.AuditResult[agentID] = team.AuditResult[agentID] || true // There is a deferral
 	}

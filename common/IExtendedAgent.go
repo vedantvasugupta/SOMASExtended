@@ -32,4 +32,6 @@ type IExtendedAgent interface {
 	// Info
 	GetExposedInfo() ExposedAgentInfo
 	LogSelfInfo()
+	GetAoARanking() []int
+	SetAoARanking(Preferences []int)
 }

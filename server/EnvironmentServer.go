@@ -25,7 +25,7 @@ type EnvironmentServer struct {
 
 
 	// set of options for team strategies (agents rank these options)
-	aoaMenu  			[]ArticlesOfAssociation
+	aoaMenu  			[]*common.ArticlesOfAssociation
 }
 
 // overrides that requires implementation
@@ -60,15 +60,15 @@ func (cs *EnvironmentServer) AllocateAoAs(){
 	// once teams assigned, gather AoA votes from each agent.
 	for _, team := range cs.teams {
 		// ranking cache for each team.
-		voteSum = [0,0,0,0]
+		var voteSum = []int{0,0,0,0}
 		for _, agent := range team.Agents {
-			for aoa, vote := range agent.AoARanking{}
-			// accumulate vote from each agent in team
-			voteSum[aoa] += vote
+			for aoa, vote := range cs.GetAgentMap()[agent].GetAoARanking() {
+				voteSum[aoa] += vote
+			}
 		}
 		// logic to check largest
-		currentMax = 0
-		preference = 0
+		var currentMax = 0
+		var preference = 0
 		for aoa, voteCount := range voteSum{
 			if voteCount > currentMax{
 				currentMax = voteCount
@@ -77,7 +77,7 @@ func (cs *EnvironmentServer) AllocateAoAs(){
 		}
 
 		// update teams strategy. 
-		team.TeamAoA = aoaMenu[preference]
+		team.TeamAoA = cs.aoaMenu[preference]
 	}
 }
 
@@ -109,33 +109,35 @@ func MakeEnvServer(numAgent int, iterations int, turns int, maxDuration time.Dur
 		serv.AddAgent(agent)
 	}
 
+	serv.aoaMenu = []*common.ArticlesOfAssociation{nil, nil, nil, nil}
+
 	// for now, menu just has 4 choices of AoA. TBC.
-	aoaMenu[0] = CreateArticlesOfAssociation(
-		CreateFixedContributionRule(10),
-		CreateFixedWithdrawalRule(10),
-		CreateFixedAuditCost(10),
-		CreateFixedPunishment(10),
+	serv.aoaMenu[0] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(10),
+		common.CreateFixedWithdrawalRule(10),
+		common.CreateFixedAuditCost(10),
+		common.CreateFixedPunishment(10),
 	)
 
-	aoaMenu[1] = CreateArticlesOfAssociation(
-		CreateFixedContributionRule(20),
-		CreateFixedWithdrawalRule(20),
-		CreateFixedAuditCost(20),
-		CreateFixedPunishment(20),
+	serv.aoaMenu[1] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(20),
+		common.CreateFixedWithdrawalRule(20),
+		common.CreateFixedAuditCost(20),
+		common.CreateFixedPunishment(20),
 	)
 
-	aoaMenu[2] = CreateArticlesOfAssociation(
-		CreateFixedContributionRule(30),
-		CreateFixedWithdrawalRule(30),
-		CreateFixedAuditCost(30),
-		CreateFixedPunishment(30),
+	serv.aoaMenu[2] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(30),
+		common.CreateFixedWithdrawalRule(30),
+		common.CreateFixedAuditCost(30),
+		common.CreateFixedPunishment(30),
 	)
 
-	aoaMenu[3] = CreateArticlesOfAssociation(
-		CreateFixedContributionRule(40),
-		CreateFixedWithdrawalRule(40),
-		CreateFixedAuditCost(40),
-		CreateFixedPunishment(40),
+	serv.aoaMenu[3] = common.CreateArticlesOfAssociation(
+		common.CreateFixedContributionRule(40),
+		common.CreateFixedWithdrawalRule(40),
+		common.CreateFixedAuditCost(40),
+		common.CreateFixedPunishment(40),
 	)
 
 
