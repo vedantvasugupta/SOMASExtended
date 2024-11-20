@@ -1,8 +1,4 @@
-# Team4 SOMAS base v1
-
-This is a workable base version Team 4 build for a MVP. 
-Note: The project structure, function names, have slight difference to the base we had now. However, we focused on getting everything working while being expandable & maintainable.
-Feel free to use any of our code here to speed up with your development. 
+# SOMAS base v1
 
 ### What feature is implemented in this base:
 - the game runs with pre-defined iterations & turns
@@ -101,20 +97,3 @@ log agents thaat are alive and dead, their score, and teams that are formed.
 │   └── EnvironmentServer.go
 └── SOMAS_Extended.go
 ```
-
-## Final Note
-This platform is far from perfect - it has bugs (you will see if you run) and I fell like there is still so many work to do. 
-
-However, I hope the work here will be useful for you! Let us know (Team 4, or Stanly Chen) if you want to chat about anything.
-
-
-## Q&A
-
-Why there are so many interfaces?
-- because golang hates cyclic dependency. For example, for server to call agent functions and agent to call server functions at the same time, it will cause circular dependency. But - if we put interfaces in a common package, we can avoid this problem.
-
-why is the main called SOMAS_Extended.go?
-- because that's the name of agent in our original project (military intelligence agent 256). Rename it as you like!
-
-This project architecture is very different from the current one!
-- yes - at first I was planning to build this system for our team, so that we could work on the strategy part first, hence the architecture was customly designed. I did not post our project for replacement of our current architecture, but I just wanted to share our progress, and help speed up your development if you found it useful.
