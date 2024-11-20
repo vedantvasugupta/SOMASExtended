@@ -14,7 +14,6 @@ type BaseDiceAgent struct {
 	score            int
 	prevRoll         int
 	lastContribution int
-	auditViolations  int
 	// memory map[uuid.UUID][]int
 }
 
@@ -30,8 +29,6 @@ type IBaseDiceAgent interface {
 	GetPrevRoll() int
 	SetLastContribution(int)
 	GetLastContribution() int
-	GetAuditViolations() int
-	AddAuditViolation()
 
 	// -------- The following functions are the ones that the specific agent should implement --
 	DoIStick(int, int) bool
@@ -109,12 +106,4 @@ func (agent *BaseDiceAgent) SetLastContribution(contribution int) {
 
 func (agent *BaseDiceAgent) GetLastContribution() int {
 	return agent.lastContribution
-}
-
-func (agent *BaseDiceAgent) GetAuditViolations() int {
-	return agent.auditViolations
-}
-
-func (agent *BaseDiceAgent) AddAuditViolation() {
-	agent.auditViolations++
 }

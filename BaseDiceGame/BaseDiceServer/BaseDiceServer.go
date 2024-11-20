@@ -19,10 +19,9 @@ type IBaseDiceServer interface {
 	VoteforArticlesofAssociation()
 	RunTurn()
 	ManageResources()
-	GenerateReport()
+	GenerateReport() // Report[]
 	Audit(common.Team)
-	VerifyThreshold()
-	CollectContributions()
+	rollAndContribute()
 	RedistributeCommonPool()
 }
 
@@ -86,23 +85,14 @@ func (bds *BaseDiceServer) FormTeams() {
 
 }
 
-func (bds *BaseDiceServer) runTurn() {
+func (bds *BaseDiceServer) RunTurn() {
 
 	// Step 1: Vote for Articles of Association
 	bds.VoteforArticlesofAssociation()
 
-	for _, team := range bds.teams {
-		agentMap := bds.GetAgentMap()
-		var commonPool int = 0
-		for _, agentId := range team.GetTeamMembers() {
-			ag := agentMap[agentId]
-			// Step 2: Roll Dice
-			ag.RollDice(ag)
-			// Step 3: Make Contribution
-			commonPool += ag.MakeContribution()
-		}
-		team.IncreaseCommonPool(commonPool)
-	}
+	bds.rollAndContribute()
+
+	// TODO: Confirm if audit before redistribution is the correct order?
 
 	// Step 4: Run the Audit Process
 	for _, team := range bds.teams {
@@ -166,8 +156,27 @@ func (bds *BaseDiceServer) VoteforArticlesofAssociation() {
 	}
 }
 
+// For each team, collects contributions from all agents and populates the auditing map to see how many deferrals there are
+// for this round
+func (bds *BaseDiceServer) rollAndContribute() {
+	for _, team := range bds.teams {
+		var commonPoolIncrease int = 0
+		for _, agentId := range team.GetTeamMembers() {
+			agent := bds.GetAgentMap()[agentId]
+			// Roll
+			agent.RollDice(agent)
+			// Contribute
+			agentContribution := agent.MakeContribution()
+			commonPoolIncrease += agentContribution
+			// For the auditing process
+			team.SetContributionResult(agentId, agent.GetScore(), agentContribution)
+		}
+		team.IncreaseCommonPool(commonPoolIncrease)
+	}
+}
+
 // generateReport generates and returns a report for each agent, including team common pool and agent-specific history.
-func (bds *BaseDiceServer) generateReport() []Report {
+func (bds *BaseDiceServer) GenerateReport() []Report {
 	var reports []Report // Slice to store reports for each agent
 
 	for _, team := range bds.teams { // Iterate over each team

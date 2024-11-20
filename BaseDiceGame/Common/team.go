@@ -6,15 +6,19 @@ type Team struct {
 	teamID      uuid.UUID
 	commonPool  int
 	teamMembers []uuid.UUID
-	articlesOfAssociation ArticlesOfAssociation
-	auditResult map[uuid.UUID]bool // map of agentID -> bool (true if agent is compliant)
+	articlesOfAssociation *ArticlesOfAssociation
+	auditResult map[uuid.UUID]int // map of agentID -> int (number of rounds the agent defers from donation strategy)
 }
 
+// TODO: Do we want to make all previous rounds auditable or only the current round?
 func CreateTeam() Team {
+	aoa := CreateArticlesOfAssociation(None, NoCost, NoPenalty)
 	return Team{
 		teamID:      uuid.New(),    // Generate a unique TeamID
 		commonPool:  0,             // Initialize commonPool to 0
 		teamMembers: []uuid.UUID{}, // Initialize an empty slice of agent UUIDs
+		articlesOfAssociation: aoa,
+		auditResult: map[uuid.UUID]int{}, // Initialize an empty map of agentID -> int
 	}
 }
 
@@ -27,8 +31,12 @@ type ITeam interface {
 	ResetCommonPool()
 	AddMember(memberID uuid.UUID)
 	RemoveMember(memberID uuid.UUID)
-	SetAuditResult(agentID uuid.UUID, result bool)
-	GetAuditResult() map[uuid.UUID]bool
+	GetArticlesOfAssociation() *ArticlesOfAssociation
+	SetArticlesOfAssociation(contributionRule ContributionRule, auditCost AuditCost, auditFailureStrategy AuditFailureStrategy)
+	// Hidden from all the other agents until an audit is requested
+	// TODO: Combine contribution and withdrawal into one composite score once withdrawal implemented
+	SetContributionResult(agentID uuid.UUID, agentScore int, agentContribution int) // Can return a bool if we want to track whether the agent deferred that particular round
+	// GetAuditResult() map[uuid.UUID]bool
 }
 
 func (t *Team) GetTeamID() uuid.UUID {
@@ -74,10 +82,25 @@ func (t *Team) AddMember(memberID uuid.UUID) {
 	t.teamMembers = append(t.teamMembers, memberID)
 }
 
-func (t *Team) SetAuditResult(audit map[uuid.UUID]bool) {
-	t.auditResult = audit
+func (t *Team) GetArticlesOfAssociation() *ArticlesOfAssociation {
+	return t.articlesOfAssociation
 }
 
-func (t *Team) GetAuditResult() map[uuid.UUID]bool {
-	return t.auditResult
+func (t *Team) SetArticlesOfAssociation(contributionRule ContributionRule, auditCost AuditCost, auditFailureStrategy AuditFailureStrategy) {
+	t.articlesOfAssociation = CreateArticlesOfAssociation(contributionRule, auditCost, auditFailureStrategy)
+}
+
+func (t *Team) SetContributionResult(agentID uuid.UUID, agentScore int, agentContribution int) {
+	contributionPercentage := t.articlesOfAssociation.GetContributionRule()
+	if float64(agentScore) * contributionPercentage > float64(agentContribution) {
+		t.auditResult[agentID]++
+	}
+}
+
+func CreateArticlesOfAssociation(contributionRule ContributionRule, auditCost AuditCost, auditFailureStrategy AuditFailureStrategy) *ArticlesOfAssociation {
+    return &ArticlesOfAssociation{
+        contributionRule: contributionRule,
+        auditCost: auditCost,
+        auditFailureStrategy: auditFailureStrategy,
+    }
 }
