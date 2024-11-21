@@ -154,7 +154,6 @@ func MakeEnvServer(numAgent int, iterations int, turns int, maxDuration time.Dur
 		common.CreateFixedPunishment(40),
 	)
 
-
 	return serv
 }
 
@@ -263,6 +262,12 @@ func (cs *EnvironmentServer) AddAgentToTeam(agentID uuid.UUID, teamID uuid.UUID)
 
 	team.Agents = append(team.Agents, agentID)
 	cs.teams[teamID] = team
+}
+
+func (cs *EnvironmentServer) GetAgentsInTeam(teamID uuid.UUID) []uuid.UUID {
+	cs.teamsMutex.RLock()
+	defer cs.teamsMutex.RUnlock()
+	return cs.teams[teamID].Agents
 }
 
 func (cs *EnvironmentServer) CheckAgentAlreadyInTeam(agentID uuid.UUID) bool {

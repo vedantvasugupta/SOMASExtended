@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 
 	"SOMAS_Extended/common"
-	"SOMAS_Extended/messages"
 
 	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/agent"
+	"github.com/MattSScott/basePlatformSOMAS/v2/pkg/message"
 )
 
 type ExtendedAgent struct {
@@ -39,11 +39,11 @@ type AgentConfig struct {
 
 func GetBaseAgents(funcs agent.IExposedServerFunctions[common.IExtendedAgent], configParam AgentConfig) *ExtendedAgent {
 	return &ExtendedAgent{
-		BaseAgent:    	agent.CreateBaseAgent(funcs),
-		server:       	funcs.(common.IServer), // Type assert the server functions to IServer interface
-		score:        	configParam.InitScore,
-		verboseLevel: 	configParam.VerboseLevel,
-		AoARanking: 	[]int{3,2,1,0},
+		BaseAgent:    agent.CreateBaseAgent(funcs),
+		server:       funcs.(common.IServer), // Type assert the server functions to IServer interface
+		score:        configParam.InitScore,
+		verboseLevel: configParam.VerboseLevel,
+		AoARanking:   []int{3, 2, 1, 0},
 	}
 }
 
@@ -155,70 +155,62 @@ func (mi *ExtendedAgent) LogSelfInfo() {
 }
 
 // ----------------------- Messaging functions -----------------------
-func (mi *ExtendedAgent) CreateExtendedMessage() messages.ExtendedMessage {
-	return messages.ExtendedMessage{
-		BaseMessage: mi.CreateBaseMessage(),
-		TeamID:      mi.teamID,
-	}
-}
 
-// send a message of base type IExtendedMessage
-func (mi *ExtendedAgent) SendPrivateMessage(receiver uuid.UUID, msg common.IExtendedMessage) {
-	mi.SendMessage(msg, receiver)
-}
+func (mi *ExtendedAgent) HandleTeamFormationMessage(msg *common.TeamFormationMessage) {
+	fmt.Printf("Agent %s received team forming invitation from %s\n", mi.GetID(), msg.GetSender())
 
-// send a message to team (if teamID is not 0)
-func (mi *ExtendedAgent) SendTeamMessage(msg common.IExtendedMessage) {
+	// Already in a team - reject invitation
 	if mi.teamID != (uuid.UUID{}) {
-		mi.BroadcastMessage(msg) // todo in the team file
-	} else if mi.verboseLevel > 6 {
-		fmt.Printf("Agent %s is trying to send a team message, but has no team\n", mi.GetID())
+		if mi.verboseLevel > 6 {
+			fmt.Printf("Agent %s rejected invitation from %s - already in team %v\n",
+				mi.GetID(), msg.GetSender(), mi.teamID)
+		}
+		return
+	}
+
+	// Handle team creation/joining based on sender's team status
+	sender := msg.GetSender()
+	if mi.server.CheckAgentAlreadyInTeam(sender) {
+		existingTeamID := mi.server.AccessAgentByID(sender).GetTeamID()
+		mi.joinExistingTeam(existingTeamID)
+	} else {
+		mi.createNewTeam(sender)
 	}
 }
 
-// broadcast a message of base type IExtendedMessage
-func (mi *ExtendedAgent) SendMessageBroadcast(msg common.IExtendedMessage) {
-	mi.BroadcastMessage(msg)
+func (mi *ExtendedAgent) HandleContributionMessage(msg *common.ContributionMessage) {
+	if mi.verboseLevel > 8 {
+		fmt.Printf("Agent %s received contribution notification from %s: amount=%d\n",
+			mi.GetID(), msg.GetSender(), msg.StatedAmount)
+	}
+
+	// Team's agent should implement logic to store or process the reported contribution amount as desired
 }
 
-// A function that can receive any type of message
-func (mi *ExtendedAgent) ReceiveMessage(msg any) {
-	switch msg := msg.(type) {
-	case *messages.TeamFormingInvitationMessage:
-		fmt.Printf("Agent %s received team forming invitation from %s\n", mi.GetID(), msg.GetSender())
-		debug_checkID := mi.teamID == (uuid.UUID{})
-		fmt.Printf("debug_checkID: %v\n", debug_checkID)
-		// Case 1: Neither agent has a team - create new team
-		if mi.teamID == (uuid.UUID{}) && msg.GetTeamID() == (uuid.UUID{}) {
-			fmt.Printf("Agent %s is creating a new team\n", mi.GetID())
-			teamIDs := []uuid.UUID{mi.GetID(), msg.GetSender()}
-			newTeamID := mi.server.CreateAndInitTeamWithAgents(teamIDs)
-			fmt.Printf("newTeamID: %v\n", newTeamID)
-			if newTeamID == (uuid.UUID{}) {
-				if mi.verboseLevel > 6 {
-					fmt.Printf("Agent %s failed to create a new team\n", mi.GetID())
-				}
-			} else {
-				mi.teamID = newTeamID
-				if mi.verboseLevel > 6 {
-					fmt.Printf("Agent %s created a new team with ID %v\n", mi.GetID(), newTeamID)
-				}
-			}
+func (mi *ExtendedAgent) HandleScoreReportMessage(msg *common.ScoreReportMessage) {
+	if mi.verboseLevel > 8 {
+		fmt.Printf("Agent %s received score report from %s: score=%d\n",
+			mi.GetID(), msg.GetSender(), msg.TurnScore)
+	}
 
-			// Case 2: Sender has a team, receiver doesn't - join sender's team
-		} else if mi.teamID == (uuid.UUID{}) && msg.GetTeamID() != (uuid.UUID{}) {
-			mi.teamID = msg.GetTeamID()
-			mi.server.AddAgentToTeam(mi.GetID(), msg.GetTeamID())
-			if mi.verboseLevel > 6 {
-				fmt.Printf("Agent %s joined team %v\n", mi.GetID(), msg.GetTeamID())
-			}
+	// Team's agent should implement logic to store or process score of other agents as desired
+}
 
-			// Case 3: Already in a team - reject invitation
-		} else if mi.teamID != (uuid.UUID{}) {
-			if mi.verboseLevel > 6 {
-				fmt.Printf("Agent %s rejected invitation from %s - already in team %v\n",
-					mi.GetID(), msg.GetSender(), mi.teamID)
-			}
+func (mi *ExtendedAgent) HandleWithdrawalMessage(msg *common.WithdrawalMessage) {
+	if mi.verboseLevel > 8 {
+		fmt.Printf("Agent %s received withdrawal notification from %s: amount=%d\n",
+			mi.GetID(), msg.GetSender(), msg.StatedAmount)
+	}
+
+	// Team's agent should implement logic to store or process the reported withdrawal amount as desired
+}
+
+func (mi *ExtendedAgent) BroadcastSyncMessageToTeam(msg message.IMessage[common.IExtendedAgent]) {
+	// Send message to all team members synchronously
+	agentsInTeam := mi.server.GetAgentsInTeam(mi.teamID)
+	for _, agentID := range agentsInTeam {
+		if agentID != mi.GetID() {
+			mi.SendSynchronousMessage(msg, agentID)
 		}
 	}
 }
@@ -228,6 +220,29 @@ func (mi *ExtendedAgent) GetExposedInfo() common.ExposedAgentInfo {
 	return common.ExposedAgentInfo{
 		AgentUUID:   mi.GetID(),
 		AgentTeamID: mi.teamID,
+	}
+}
+
+func (mi *ExtendedAgent) CreateScoreReportMessage() *common.ScoreReportMessage {
+	return &common.ScoreReportMessage{
+		BaseMessage: mi.CreateBaseMessage(),
+		TurnScore:   mi.lastScore,
+	}
+}
+
+func (mi *ExtendedAgent) CreateContributionMessage(statedAmount int, expectedAmount int) *common.ContributionMessage {
+	return &common.ContributionMessage{
+		BaseMessage:    mi.CreateBaseMessage(),
+		StatedAmount:   statedAmount,
+		ExpectedAmount: expectedAmount,
+	}
+}
+
+func (mi *ExtendedAgent) CreateWithdrawalMessage(statedAmount int, expectedAmount int) *common.WithdrawalMessage {
+	return &common.WithdrawalMessage{
+		BaseMessage:    mi.CreateBaseMessage(),
+		StatedAmount:   statedAmount,
+		ExpectedAmount: expectedAmount,
 	}
 }
 
@@ -284,15 +299,40 @@ func (mi *ExtendedAgent) DecideTeamForming(agentInfoList []common.ExposedAgentIn
 
 func (mi *ExtendedAgent) SendTeamFormingInvitation(agentIDs []uuid.UUID) {
 	for _, agentID := range agentIDs {
-		invitationMsg := &messages.TeamFormingInvitationMessage{
-			ExtendedMessage: mi.CreateExtendedMessage(),
-			AgentInfo:       mi.GetExposedInfo(),
-			Message:         "Would you like to form a team?",
+		invitationMsg := &common.TeamFormationMessage{
+			BaseMessage: mi.CreateBaseMessage(),
+			AgentInfo:   mi.GetExposedInfo(),
+			Message:     "Would you like to form a team?",
 		}
 		// Debug print to check message contents
-		fmt.Printf("Sending invitation: sender=%v, teamID=%v, receiver=%v\n",
-			mi.GetID(), invitationMsg.GetTeamID(), agentID)
-		mi.SendPrivateMessage(agentID, invitationMsg)
+		fmt.Printf("Sending invitation: sender=%v, teamID=%v, receiver=%v\n", mi.GetID(), mi.teamID, agentID)
+		mi.SendMessage(invitationMsg, agentID)
+	}
+}
+
+func (mi *ExtendedAgent) createNewTeam(senderID uuid.UUID) {
+	fmt.Printf("Agent %s is creating a new team\n", mi.GetID())
+	teamIDs := []uuid.UUID{mi.GetID(), senderID}
+	newTeamID := mi.server.CreateAndInitTeamWithAgents(teamIDs)
+
+	if newTeamID == (uuid.UUID{}) {
+		if mi.verboseLevel > 6 {
+			fmt.Printf("Agent %s failed to create a new team\n", mi.GetID())
+		}
+		return
+	}
+
+	mi.teamID = newTeamID
+	if mi.verboseLevel > 6 {
+		fmt.Printf("Agent %s created a new team with ID %v\n", mi.GetID(), newTeamID)
+	}
+}
+
+func (mi *ExtendedAgent) joinExistingTeam(teamID uuid.UUID) {
+	mi.teamID = teamID
+	mi.server.AddAgentToTeam(mi.GetID(), teamID)
+	if mi.verboseLevel > 6 {
+		fmt.Printf("Agent %s joined team %v\n", mi.GetID(), teamID)
 	}
 }
 
@@ -312,7 +352,7 @@ func (mi *ExtendedAgent) SetAoARanking(Preferences []int) {
 func (mi *ExtendedAgent) GetAoARanking() []int {
 	return mi.AoARanking
 }
-  
+
 func (mi *ExtendedAgent) SetCommonPoolValue(poolValue int) {
 	mi.commonPoolValue = poolValue
 	fmt.Printf("setting common pool to %d\n", poolValue)
